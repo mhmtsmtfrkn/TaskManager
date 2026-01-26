@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anlık Yönetim Paneli - Mehmet Koçak</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <style>
+        body { font-family: 'Outfit', sans-serif; background: #f0f2f5; min-height: 100vh; color: #1f2937; position: relative; padding-bottom: 140px; }
+        .bg-shape { position: fixed; border-radius: 50%; filter: blur(80px); z-index: -1; opacity: 0.6; animation: floatBackground 10s infinite alternate; }
+        .shape-1 { top: -10%; left: -10%; width: 600px; height: 600px; background: #a78bfa; }
+        .shape-2 { bottom: -10%; right: -10%; width: 500px; height: 500px; background: #f472b6; }
+        @keyframes floatBackground { from { transform: translate(0, 0); } to { transform: translate(30px, 30px); } }
+
+        #loginOverlay { background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(20px); z-index: 1000; }
+        #personSelect { background: rgba(79, 70, 229, 0.15); border: 1px solid rgba(255, 255, 255, 0.1); color: #fff; }
+        #personSelect option { background: #1e293b; color: #fff; }
+
+        .task-card {
+            background: rgba(255, 255, 255, 0.75); backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.5);
+            border-radius: 24px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03); transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            height: 200px; display: flex; flex-direction: row; overflow: hidden; cursor: pointer; position: relative;
+        }
+        .task-card:hover { transform: translateY(-8px); background: rgba(255, 255, 255, 0.95); }
+        
+        .neon-sidebar { width: 45px; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; padding: 10px 0; border-right: 1px solid rgba(0,0,0,0.05); background: rgba(0,0,0,0.02); }
+        .neon-tag { font-size: 9px; font-weight: 800; width: 34px; height: 18px; display: flex; align-items: center; justify-content: center; border-radius: 4px; transition: 0.3s; }
+        .neon-R  { color: #00ffcc; border: 1px solid #00ffcc; box-shadow: 0 0 5px #00ffcc; }
+        .neon-RG { color: #ff0055; border: 1px solid #ff0055; box-shadow: 0 0 5px #ff0055; }
+        .neon-RH { color: #bc13fe; border: 1px solid #bc13fe; box-shadow: 0 0 5px #bc13fe; }
+        .neon-RA { color: #00d2ff; border: 1px solid #00d2ff; box-shadow: 0 0 5px #00d2ff; }
+        .neon-A  { color: #ff4d00; border: 1px solid #ff4d00; box-shadow: 0 0 5px #ff4d00; }
+        .neon-1 { color: #ffcc00; border: 1px solid #ffcc00; } .neon-2 { color: #00ff99; border: 1px solid #00ff99; } .neon-3 { color: #94a3b8; border: 1px solid #94a3b8; }
+
+        .kpi-container { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); width: auto; z-index: 100; display: flex; gap: 15px; }
+        .kpi-card { background: rgba(15, 23, 42, 0.9); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.1); padding: 10px 20px; border-radius: 25px; display: flex; align-items: center; gap: 12px; box-shadow: 0 15px 35px rgba(0,0,0,0.3); }
+
+        .prio-badge { font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 6px; display: inline-block; cursor: pointer; }
+        .prio-R  { background: #00ffcc; color: #000; }
+        .prio-A { background: #ef4444; color: white; }
+        .prio-RG { background: #7f1d1d; color: white; }
+        .prio-RH { background: #9d174d; color: white; }
+        .prio-RA { background: #4338ca; color: white; }
+        .prio-1 { background: #f97316; color: white; }
+        .prio-2 { background: #eab308; color: white; }
+        .prio-3 { background: #64748b; color: white; }
+
+        .date-input { font-size: 10px; border: 1px solid #e2e8f0; border-radius: 4px; padding: 2px; background: #f8fafc; width: 100%; outline: none; }
+        .diff-tag { font-size: 9px; font-weight: bold; padding: 1px 4px; border-radius: 4px; }
+        .diff-late { background: #fee2e2; color: #b91c1c; }
+        .diff-early { background: #f0fdf4; color: #15803d; }
+        .custom-scroll::-webkit-scrollbar { width: 6px; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    </style>
+</head>
+<body class="flex flex-col items-center p-6">
+
+    <div id="loginOverlay" class="fixed inset-0 flex items-center justify-center">
+        <div class="bg-white/5 p-8 rounded-[40px] border border-white/10 shadow-2xl w-[400px] text-center">
+            <div class="mb-6">
+                <div class="w-16 h-16 bg-indigo-600 rounded-2xl mx-auto flex items-center justify-center text-white text-3xl mb-4 shadow-lg"><i class="fa-solid fa-cloud"></i></div>
+                <h2 class="text-white text-2xl font-bold">Bulut Sistem Girişi</h2>
+                <p class="text-white/40 text-sm mt-1">Veriler tüm bilgisayarlarda anlık eşleşir</p>
+            </div>
+            <div class="space-y-4 mb-6">
+                <select id="personSelect" class="w-full rounded-2xl p-4 outline-none cursor-pointer transition-all font-bold text-center">
+                    <option value="">İsim Seçin</option>
+                    <option value="all">--- TÜMÜNÜ GÖR (YÖNETİCİ) ---</option>
+                </select>
+                <div class="flex flex-col gap-2">
+                    <button onclick="document.getElementById('fileInput').click()" class="text-indigo-400 text-xs font-bold hover:text-indigo-300"><i class="fa-solid fa-file-excel mr-1"></i> Excel Listesi Yükle</button>
+                    <button onclick="clearStorage()" class="text-rose-400 text-[10px] font-bold hover:text-rose-300 mt-2"><i class="fa-solid fa-eraser mr-1"></i> Sistemi Sıfırla</button>
+                </div>
+            </div>
+            <button onclick="loginUser()" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-4 rounded-2xl transition-all">Sistemi Başlat</button>
+        </div>
+    </div>
+
+    <div class="bg-shape shape-1"></div>
+    <div class="bg-shape shape-2"></div>
+
+    <header class="w-full max-w-6xl flex flex-col md:flex-row justify-between items-center mb-8 z-10 gap-6 hidden" id="mainHeader">
+        <div class="text-center md:text-left">
+            <h1 class="text-4xl font-bold text-slate-800 tracking-tight">Görev Merkezi</h1>
+            <div class="flex items-center gap-2">
+                <div id="statusPulse" class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+                <p class="text-slate-500 font-medium" id="activeUserNameDisplay">Bulut Aktif</p>
+            </div>
+        </div>
+        <div class="flex flex-wrap justify-center gap-3 bg-white/60 p-2 rounded-2xl border border-white/50 backdrop-blur-sm shadow-sm">
+            <button onclick="syncData()" class="bg-indigo-600 text-white px-4 py-2 rounded-xl font-semibold flex items-center gap-2 text-sm shadow-md transition"><i class="fa-solid fa-cloud-arrow-up"></i> Şimdi Buluta Kaydet</button>
+            <button onclick="backupData()" class="bg-slate-800 text-white px-4 py-2 rounded-xl font-semibold flex items-center gap-2 text-sm shadow-md transition"><i class="fa-solid fa-download"></i> Bilgisayara Yedekle</button>
+            <button onclick="logout()" class="bg-rose-500 text-white px-4 py-2 rounded-xl font-semibold flex items-center gap-2 text-sm shadow-md transition"><i class="fa-solid fa-power-off"></i> Çıkış</button>
+        </div>
+    </header>
+
+    <div id="cardContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 w-full max-w-6xl z-10 pb-12 hidden"></div>
+
+    <div class="kpi-container hidden" id="kpiPanel">
+        <div class="kpi-card" style="border-bottom: 3px solid #00ff99;"><div class="flex flex-col"><span class="text-white/50 text-[10px] uppercase font-bold tracking-widest">Sistem Verimliliği</span><span id="personalPerfScore" class="text-white font-black text-2xl" style="color: #00ff99; text-shadow: 0 0 10px #00ff99;">%0</span></div></div>
+    </div>
+
+    <input type="file" id="fileInput" accept=".xlsx, .xls, .csv" class="hidden">
+
+    <div id="taskModal" class="fixed inset-0 bg-slate-900/40 hidden items-center justify-center z-[150] backdrop-blur-sm p-4">
+        <div class="bg-white w-full max-w-5xl rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div class="p-6 bg-slate-50 border-b flex justify-between items-center"><h2 id="modalTitle" class="text-xl font-bold text-slate-800 capitalize">Görevler</h2><button onclick="closeModal()" class="text-slate-500 text-2xl px-2 hover:text-rose-500 transition-colors">&times;</button></div>
+            <div class="flex-1 overflow-y-auto p-6 custom-scroll" id="taskList"></div>
+            <div class="p-4 bg-slate-50 border-t flex gap-2"><select id="newPriorityInput" class="border rounded-lg text-sm px-2 bg-white font-bold"><option value="R">R</option><option value="RG">RG</option><option value="RH">RH</option><option value="RA">RA</option><option value="A">A</option><option value="1">1</option><option value="2">2</option><option value="3" selected>3</option></select><input type="text" id="newTaskInput" placeholder="Görev tanımı..." class="flex-1 p-2 border rounded-lg text-sm bg-white outline-none"><button onclick="addTask()" class="bg-blue-600 text-white px-6 py-2 rounded-lg text-sm font-bold shadow-md hover:bg-blue-700 transition">Ekle</button></div>
+        </div>
+    </div>
+
+    <script>
+        /* BURAYA 1. ADIMDA KOPYALADIĞINIZ LİNKİ YAPIŞTIRIN */
+        const FIREBASE_URL = "https://taskmanager-10137-default-rtdb.europe-west1.firebasedatabase.app"; 
+
+        let categories = [];
+        let currentUserId = null; 
+        let isManagerMode = false;
+
+        // --- BULUT VERİ YÖNETİMİ ---
+        async function syncData() {
+            try {
+                const response = await fetch(FIREBASE_URL, {
+                    method: 'PUT',
+                    body: JSON.stringify(categories)
+                });
+                if(response.ok) alert("Değişiklikler tüm bilgisayarlara gönderildi!");
+            } catch (err) { alert("Buluta bağlanılamadı!"); }
+        }
+
+        async function loadFromCloud() {
+            try {
+                const response = await fetch(FIREBASE_URL);
+                const data = await response.json();
+                if (data) {
+                    categories = data;
+                    updateLoginList();
+                    if(currentUserId || isManagerMode) renderCards();
+                }
+            } catch (err) { console.log("İlk yükleme verisi bulunamadı."); }
+        }
+
+        // 30 saniyede bir otomatik kontrol et
+        setInterval(loadFromCloud, 30000);
+
+        function clearStorage() {
+            if (confirm("Tüm veriler buluttan silinecek! Emin misiniz?")) {
+                categories = [];
+                syncData();
+                location.reload();
+            }
+        }
+
+        function loginUser() {
+            const select = document.getElementById('personSelect');
+            if (!select.value) return alert("Seçim yapın!");
+            if (select.value === "all") { isManagerMode = true; document.getElementById('activeUserNameDisplay').innerText = "Yönetici"; }
+            else { isManagerMode = false; currentUserId = parseFloat(select.value); document.getElementById('activeUserNameDisplay').innerText = categories.find(c => c.id === currentUserId).title; }
+            document.getElementById('loginOverlay').classList.add('hidden');
+            document.getElementById('mainHeader').classList.remove('hidden');
+            document.getElementById('cardContainer').classList.remove('hidden');
+            document.getElementById('kpiPanel').classList.remove('hidden');
+            renderCards();
+        }
+
+        function logout() { location.reload(); }
+
+        function calculatePerformance(tasks) {
+            const highTasks = tasks.filter(t => (t.priority === 'A' || t.priority === '1') && t.dateTarget);
+            if (highTasks.length === 0) return 100;
+            let diffTotal = 0;
+            highTasks.forEach(t => {
+                const target = new Date(t.dateTarget);
+                const actual = t.dateActual ? new Date(t.dateActual) : new Date();
+                const diff = Math.ceil((actual - target) / (1000 * 60 * 60 * 24));
+                if (t.status === "Yapıldı") diffTotal += diff; else if (diff > 0) diffTotal += diff;
+            });
+            return Math.max(0, Math.min(100, 100 - (diffTotal * 5)));
+        }
+
+        document.getElementById('fileInput').addEventListener('change', (e) => {
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                const data = XLSX.utils.sheet_to_json(XLSX.read(new Uint8Array(ev.target.result), {type:'array'}).Sheets[XLSX.read(new Uint8Array(ev.target.result), {type:'array'}).SheetNames[0]], {defval:""});
+                data.forEach(r => {
+                    const n = r[Object.keys(r).find(k => /isim|ad|personel/i.test(k))].toString().toUpperCase();
+                    const t = r[Object.keys(r).find(k => /görev|iş|yapılacak/i.test(k))];
+                    let existing = categories.find(c => c.title === n);
+                    const task = { text: t, priority: "3", status: "Yapılıyor", note: "", dateGiven: new Date().toISOString().split('T')[0], dateTarget: "", dateActual: "" };
+                    if (existing) existing.tasks.push(task); else categories.push({ id: Date.now() + Math.random(), title: n, tasks: [task] });
+                });
+                syncData(); // Excel yüklenince buluta gönder
+                updateLoginList();
+            };
+            reader.readAsArrayBuffer(e.target.files[0]);
+        });
+
+        function updateLoginList() {
+            const select = document.getElementById('personSelect');
+            const currentVal = select.value;
+            select.innerHTML = '<option value="">İsim Seçin</option><option value="all">--- TÜMÜNÜ GÖR (YÖNETİCİ) ---</option>' + categories.map(c => `<option value="${c.id}">${c.title}</option>`).join('');
+            select.value = currentVal;
+        }
+
+        function renderCards() {
+            const container = document.getElementById('cardContainer');
+            const usersToShow = isManagerMode ? categories : categories.filter(c => c.id === currentUserId);
+            container.innerHTML = usersToShow.map(cat => {
+                const counts = {}; cat.tasks.forEach(t => { counts[t.priority] = (counts[t.priority] || 0) + 1; });
+                const sidebar = `<div class="neon-sidebar">${["R","RG","RH","RA","A","1","2","3"].map(p => counts[p] ? `<div class="neon-tag neon-${p}">${p}:${counts[p]}</div>` : "").join('')}</div>`;
+                return `<div class="task-card" onclick="openModal(${cat.id})">${sidebar}<div class="card-body"><div class="flex justify-between items-start"><div class="icon-box w-9 h-9 rounded-xl flex items-center justify-center bg-indigo-50 text-indigo-600"><i class="fa-solid fa-user-check"></i></div><span class="text-[11px] font-black text-indigo-600">%${calculatePerformance(cat.tasks)}</span></div><h3 class="text-lg font-bold truncate text-slate-800">${cat.title}</h3><p class="text-xs text-slate-400">${cat.tasks.length} Görev</p></div></div>`;
+            }).join('');
+            const avg = usersToShow.length ? Math.round(usersToShow.reduce((a, b) => a + calculatePerformance(b.tasks), 0) / usersToShow.length) : 0;
+            document.getElementById('personalPerfScore').innerText = `%${avg}`;
+        }
+
+        function renderTasks(uId) {
+            const cat = categories.find(c => c.id === uId);
+            document.getElementById('taskList').innerHTML = cat.tasks.map((t, i) => {
+                const target = t.dateTarget ? new Date(t.dateTarget) : null;
+                const diff = target ? Math.ceil(((t.dateActual ? new Date(t.dateActual) : new Date()) - target) / (1000 * 60 * 60 * 24)) : null;
+                const diffHtml = diff !== null ? (diff > 0 ? `<span class="diff-tag diff-late">+${diff} G.</span>` : (diff < 0 ? `<span class="diff-tag diff-early">${diff} G.</span>` : `<span class="diff-tag diff-early">OK</span>`)) : "";
+                return `<div class="p-4 border border-slate-100 rounded-2xl mb-4 bg-white shadow-sm"><div class="flex justify-between items-center mb-2 gap-3"><div class="flex items-center gap-2 flex-1"><select onchange="updateTask(${uId}, ${i}, 'priority', this.value)" class="prio-badge prio-${t.priority} border-none outline-none"><option value="R" ${t.priority=='R'?'selected':''}>R</option><option value="RG" ${t.priority=='RG'?'selected':''}>RG</option><option value="RH" ${t.priority=='RH'?'selected':''}>RH</option><option value="RA" ${t.priority=='RA'?'selected':''}>RA</option><option value="A" ${t.priority=='A'?'selected':''}>A</option><option value="1" ${t.priority=='1'?'selected':''}>1</option><option value="2" ${t.priority=='2'?'selected':''}>2</option><option value="3" ${t.priority=='3'?'selected':''}>3</option></select><span class="text-sm font-bold flex-1">${t.text}</span></div><select onchange="updateTask(${uId}, ${i}, 'status', this.value)" class="text-[10px] border rounded p-1 font-bold ${t.status=='Yapıldı'?'bg-green-50':''}"> <option ${t.status=='Yapılıyor'?'selected':''}>Yapılıyor</option><option ${t.status=='Tamamlanıyor'?'selected':''}>Tamamlanıyor</option><option ${t.status=='Yapıldı'?'selected':''}>Yapıldı</option></select></div>${(t.priority=='A'||t.priority=='1') ? `<div class="grid grid-cols-3 gap-3 bg-slate-50/50 p-2 rounded-xl mb-2"><div><label class="text-[8px] font-black uppercase">Veriliş</label><input type="date" value="${t.dateGiven}" onchange="updateTask(${uId}, ${i},'dateGiven',this.value)" class="date-input"></div><div><label class="text-[8px] font-black uppercase">Hedef</label><input type="date" value="${t.dateTarget}" onchange="updateTask(${uId}, ${i},'dateTarget',this.value)" class="date-input"></div><div><label class="text-[8px] font-black uppercase">Gerçekleşen ${diffHtml}</label><input type="date" value="${t.dateActual}" onchange="updateTask(${uId}, ${i},'dateActual',this.value)" class="date-input"></div></div>` : ''}<textarea onchange="updateTask(${uId}, ${i}, 'note', this.value)" class="w-full text-xs border border-slate-100 rounded p-2 h-12 outline-none" placeholder="Notlar...">${t.note || ""}</textarea></div>`;
+            }).join('');
+        }
+
+        function updateTask(uId, tIdx, field, val) { 
+            const cat = categories.find(c => c.id === uId);
+            cat.tasks[tIdx][field] = val; 
+            renderTasks(uId); 
+            renderCards(); 
+            syncData(); // Her değişiklikte buluta gönder
+        }
+
+        function openModal(id) { currentCategoryId = id; document.getElementById('modalTitle').innerText = categories.find(c => c.id === id).title; renderTasks(id); document.getElementById('taskModal').classList.replace('hidden', 'flex'); }
+        function closeModal() { document.getElementById('taskModal').classList.replace('flex', 'hidden'); renderCards(); }
+        
+        function addTask() {
+            const inp = document.getElementById('newTaskInput'); if (!inp.value) return;
+            const cat = categories.find(c => c.id === currentCategoryId);
+            cat.tasks.push({ text: inp.value.toUpperCase(), priority: document.getElementById('newPriorityInput').value, status: "Yapılıyor", note: "", dateGiven: new Date().toISOString().split('T')[0], dateTarget: "", dateActual: "" });
+            inp.value = ''; renderTasks(currentCategoryId); renderCards(); syncData();
+        }
+
+        function backupData() {
+            const blob = new Blob([JSON.stringify(categories)], {type:"application/json"});
+            const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+            a.download = `Sistem_Yedek.json`; a.click();
+        }
+
+        window.onload = loadFromCloud;
+    </script>
+</body>
+</html>
