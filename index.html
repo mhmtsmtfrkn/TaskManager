@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TaskManager Pro - Kesin Giriş Çözümü</title>
+    <title>Task Hub Pro - Kesin Senkronizasyon</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700&display=swap" rel="stylesheet">
 
     <style>
-        body { font-family: 'Outfit', sans-serif; background: #f0f2f5; min-height: 100vh; color: #1f2937; padding-bottom: 140px; overflow-x: hidden; }
+        body { font-family: 'Outfit', sans-serif; background: #f0f2f5; min-height: 100vh; color: #1f2937; position: relative; padding-bottom: 140px; overflow-x: hidden; }
         .bg-shape { position: fixed; border-radius: 50%; filter: blur(80px); z-index: -1; opacity: 0.6; animation: floatBackground 10s infinite alternate; }
         .shape-1 { top: -10%; left: -10%; width: 600px; height: 600px; background: #a78bfa; }
         .shape-2 { bottom: -10%; right: -10%; width: 500px; height: 500px; background: #f472b6; }
@@ -18,19 +18,19 @@
 
         #loginOverlay { background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(20px); z-index: 1000; }
         #personSelect { background: #ffffff !important; color: #1e293b !important; border: 2px solid #6366f1; font-weight: 700; border-radius: 16px; }
+        #personSelect option { color: #1e293b !important; background: #ffffff !important; }
 
         .task-card {
             background: rgba(255, 255, 255, 0.75); backdrop-filter: blur(15px); border: 1px solid rgba(16, 185, 129, 0.3);
             border-radius: 28px; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             height: 200px; display: flex; overflow: hidden; cursor: pointer; position: relative;
-            box-shadow: 0 0 20px rgba(16, 185, 129, 0.35); 
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.3); 
         }
-        .task-card:hover { transform: translateY(-12px); box-shadow: 0 0 45px rgba(16, 185, 129, 0.75); border-color: #10b981; }
+        .task-card:hover { transform: translateY(-12px); box-shadow: 0 0 45px rgba(16, 185, 129, 0.7); border-color: #10b981; }
 
         .task-item-row { background: #fff; border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 24px; margin-bottom: 16px; padding: 20px; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.15); transition: 0.3s; }
         .task-item-row:hover { border-color: #10b981; box-shadow: 0 0 25px rgba(16, 185, 129, 0.4); }
         
-        /* ÖNEM RENKLERİ */
         .prio-R  { background: #00f2fe; color: #000; } .neon-R  { color: #00f2fe; border: 1px solid #00f2fe; }
         .prio-RG { background: #667eea; color: #fff; } .neon-RG { color: #667eea; border: 1px solid #667eea; }
         .prio-RH { background: #b721ff; color: #fff; } .neon-RH { color: #b721ff; border: 1px solid #b721ff; }
@@ -52,16 +52,16 @@
 
     <div id="loginOverlay" class="fixed inset-0 flex items-center justify-center">
         <div class="bg-slate-900/50 p-10 rounded-[45px] border border-white/10 shadow-2xl w-[420px] text-center backdrop-blur-xl">
-            <h2 class="text-white text-3xl font-extrabold mb-6 italic tracking-tight">TASK HUB PRO</h2>
+            <h2 class="text-white text-3xl font-extrabold mb-6 italic tracking-tight uppercase">TASK HUB PRO</h2>
             <div class="flex items-center justify-center gap-2 mb-4">
                 <div id="statusDot" class="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse"></div>
-                <p id="cloudStatus" class="text-amber-400 text-xs font-bold uppercase">Veriler Hazırlanıyor...</p>
+                <p id="cloudStatus" class="text-amber-400 text-xs font-bold uppercase">SİSTEM HAZIRLANIYOR...</p>
             </div>
             <select id="personSelect" class="w-full p-4 outline-none mb-6">
                 <option value="">Lütfen Bekleyin...</option>
             </select>
             <div class="grid grid-cols-2 gap-3 mb-6">
-                <button onclick="document.getElementById('restoreInput').click()" class="bg-slate-800 text-white text-[11px] py-3 rounded-xl hover:bg-slate-700 transition">Yedek Yükle</button>
+                <button onclick="document.getElementById('restoreInput').click()" class="bg-slate-800 text-white text-[11px] py-3 rounded-xl hover:bg-slate-700 transition">JSON Yükle</button>
                 <button onclick="clearStorage()" class="bg-slate-800 text-rose-400 text-[11px] py-3 rounded-xl hover:bg-slate-700 transition">Sıfırla</button>
             </div>
             <button onclick="loginUser()" class="w-full bg-indigo-600 text-white font-black py-5 rounded-2xl shadow-xl hover:bg-indigo-500 transition active:scale-95">SİSTEME GİRİŞ YAP</button>
@@ -92,14 +92,14 @@
                         <option value="all">Filtrele</option>
                         <option value="R">R</option><option value="RG">RG</option><option value="RH">RH</option><option value="RA">RA</option><option value="A">A</option><option value="1">1</option><option value="2">2</option><option value="3">3</option>
                     </select>
-                    <button onclick="generateReport(currentUserId)" class="px-5 py-2 bg-indigo-600 text-white rounded-xl text-xs font-bold hover:bg-indigo-700 shadow-md transition">PDF</button>
+                    <button onclick="generateReport(currentUserId)" class="px-5 py-2 bg-indigo-600 text-white rounded-xl text-xs font-bold">PDF</button>
                     <button onclick="closeModal()" class="text-slate-400 text-3xl hover:text-rose-500 transition-colors">&times;</button>
                 </div>
             </div>
             <div id="taskList" class="flex-1 overflow-y-auto p-8 custom-scroll bg-slate-50"></div>
             <div class="p-6 bg-slate-50 border-t flex gap-3">
-                <select id="newPriorityInput" class="bg-white border rounded-xl px-4 font-bold outline-none shadow-sm"><option value="R">R</option><option value="RG">RG</option><option value="RH">RH</option><option value="RA">RA</option><option value="A">A</option><option value="1">1</option><option value="2">2</option><option value="3" selected>3</option></select>
-                <input type="text" id="newTaskInput" placeholder="Yeni görev ekle..." class="flex-1 p-4 bg-white border rounded-xl outline-none focus:border-indigo-500 shadow-sm">
+                <select id="newPriorityInput" class="bg-white border rounded-xl px-4 font-bold outline-none shadow-sm"><option value="R">R</option><option value="A">A</option><option value="1">1</option></select>
+                <input type="text" id="newTaskInput" placeholder="Yeni görev ekle..." class="flex-1 p-4 bg-white border rounded-xl outline-none focus:border-indigo-500 transition-all shadow-sm">
                 <button onclick="addTask()" class="bg-indigo-600 text-white px-10 py-4 rounded-xl font-bold hover:bg-indigo-700 shadow-lg transition">EKLE</button>
             </div>
         </div>
@@ -126,40 +126,40 @@
         let isManagerMode = false;
         let taskToMoveIdx = null;
 
-        // --- GELİŞMİŞ VERİ YÜKLEME ---
+        // --- TAM OTOMATİK VERİ ÇEKME ---
         async function loadData() {
             const statusText = document.getElementById('cloudStatus');
             const statusDot = document.getElementById('statusDot');
             
-            // 1. Önce yerel hafızadan yükle (Boş liste döngüsünü kırmak için)
-            const local = localStorage.getItem('yonetimData');
-            if(local) {
-                categories = JSON.parse(local);
-                updateLoginList();
-                statusText.innerText = "Yerel Hafıza Hazır";
-            }
-
-            // 2. Ardından bulutu kontrol et
             try {
                 const response = await fetch(FIREBASE_URL);
                 let data = await response.json();
-                if (data && !Array.isArray(data)) data = Object.values(data);
                 
-                if (data && Array.isArray(data)) {
+                // Veri undefined veya boşsa hafızaya bak
+                if (data) {
+                    if (!Array.isArray(data)) data = Object.values(data);
                     categories = data;
-                    saveToStorage(); 
-                    updateLoginList();
-                    statusText.innerText = "Sistem Güncel (Bulut)";
+                    saveToStorage();
+                    statusText.innerText = "Bulut Senkronizasyonu Başarılı";
                     statusDot.className = "w-2.5 h-2.5 rounded-full bg-emerald-500";
+                } else {
+                    throw new Error("Boş Veri");
                 }
             } catch (err) {
-                statusText.innerText = "Yerel Mod Aktif";
+                const local = localStorage.getItem('yonetimData');
+                if(local) {
+                    categories = JSON.parse(local);
+                    statusText.innerText = "Yerel Veri Aktif (Çevrimdışı)";
+                } else {
+                    statusText.innerText = "Veri Yok, JSON Yükleyin";
+                }
                 statusDot.className = "w-2.5 h-2.5 rounded-full bg-indigo-500 animate-none";
             }
+            updateLoginList();
         }
 
-        // --- GİRİŞ ANINDA SIFIRLANMAYI ENGELLEYEN FONKSİYON ---
-        function loginUser() {
+        // --- GİRİŞ ANINDA SIFIRLANMAYI ENGELLEYEN YAPI ---
+        async function loginUser() {
             const select = document.getElementById('personSelect');
             if (!select.value || select.value === "") return alert("Lütfen bir isim seçin!");
             
@@ -170,7 +170,7 @@
                 isManagerMode = false;
                 currentUserId = parseFloat(select.value);
                 const user = categories.find(c => c.id === currentUserId);
-                if(!user) return alert("Personel bulunamadı, lütfen listeyi yenileyin!");
+                if(!user) return alert("Hata: Personel listesi güncel değil!");
 
                 const pass = prompt(`${user.title} şifresi:`);
                 const expected = (user.password || passList[user.title.toUpperCase()] || "1234").toString().trim();
@@ -184,31 +184,31 @@
             renderCards();
         }
 
-        // --- JSON YEDEK YÜKLEME (ONARILDI) ---
+        // --- JSON YEDEK YÜKLEME VE BULUTA KİLİTLEME ---
         document.getElementById('restoreInput').addEventListener('change', function(e) {
             const reader = new FileReader();
-            reader.onload = (ev) => {
+            reader.onload = async (ev) => {
                 try {
                     const data = JSON.parse(ev.target.result);
                     if (Array.isArray(data)) {
                         categories = data;
                         saveToStorage(); 
                         updateLoginList();
-                        alert("Yedek başarıyla yüklendi! Şimdi giriş yapabilirsiniz.");
+                        alert("Yedek başarıyla yüklendi! Giriş yapabilirsiniz.");
                     }
-                } catch(e) { alert("Dosya bozuk veya hatalı JSON!"); }
+                } catch(e) { alert("Dosya hatalı!"); }
             };
             reader.readAsText(e.target.files[0]);
         });
 
-        // --- DİĞER FONKSİYONLAR ---
+        // --- FONKSİYONLAR ---
         function renderCards() {
             const container = document.getElementById('cardContainer');
             const usersToShow = isManagerMode ? categories : categories.filter(c => c.id === currentUserId);
             container.innerHTML = usersToShow.map(cat => {
                 const counts = {}; cat.tasks.forEach(t => counts[t.priority] = (counts[t.priority] || 0) + 1);
                 const sidebar = `<div class="neon-sidebar">${["R","RG","RH","RA","A","1","2","3"].map(p => counts[p] ? `<div class="neon-tag neon-${p}">${p}:${counts[p]}</div>` : "").join('')}</div>`;
-                return `<div class="task-card" onclick="openModal(${cat.id})">${sidebar}<div class="p-6 flex flex-col justify-between flex-1"><h3 class="text-xl font-bold text-slate-800">${cat.title}</h3><p class="text-indigo-400 text-xs font-black uppercase tracking-widest">${cat.tasks.length} Görev Kaydı</p></div></div>`;
+                return `<div class="task-card" onclick="openModal(${cat.id})">${sidebar}<div class="p-6 flex flex-col justify-between flex-1"><h3 class="text-xl font-bold text-slate-800">${cat.title}</h3><p class="text-indigo-400 text-xs font-black uppercase tracking-widest">${cat.tasks.length} Görev Listelendi</p></div></div>`;
             }).join('');
         }
 
@@ -238,9 +238,9 @@
             select.innerHTML = '<option value="">İsim Seçin</option><option value="all">--- YÖNETİCİ ---</option>' + categories.map(c => `<option value="${c.id}">${c.title}</option>`).join(''); 
         }
         function saveToStorage() { localStorage.setItem('yonetimData', JSON.stringify(categories)); }
-        function clearStorage() { if(confirm("Hafıza temizlenecek!")) { localStorage.clear(); location.reload(); } }
-        async function syncData() { try { await fetch(FIREBASE_URL, { method: 'PUT', body: JSON.stringify(categories) }); alert("Bulut başarıyla güncellendi!"); } catch (err) { alert("Hata!"); } }
-        function logout() { if(confirm("Çıkış yapılsın mı?")) location.reload(); }
+        function clearStorage() { if(confirm("Sıfırlansın mı?")) { localStorage.clear(); location.reload(); } }
+        async function syncData() { try { await fetch(FIREBASE_URL, { method: 'PUT', body: JSON.stringify(categories) }); alert("Bulut senkronize edildi!"); } catch (err) { alert("Hata!"); } }
+        function logout() { location.reload(); }
         function openModal(id) { currentUserId = id; document.getElementById('modalTitle').innerText = categories.find(c => c.id === id).title; renderTasks(id); document.getElementById('taskModal').classList.replace('hidden', 'flex'); }
         function closeModal() { document.getElementById('taskModal').classList.replace('flex', 'hidden'); renderCards(); }
         function generateReport(uId = null) {
