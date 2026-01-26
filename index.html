@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TaskManager Pro - Tam Sürüm</title>
+    <title>TaskManager Pro - Cloud Edition</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -24,14 +24,18 @@
         
         .neon-sidebar { width: 45px; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; border-right: 1px solid rgba(255,255,255,0.05); }
         .neon-tag { font-size: 8px; font-weight: 800; width: 34px; height: 16px; display: flex; align-items: center; justify-content: center; border-radius: 4px; }
-        .neon-R { color: #22d3ee; border: 1px solid #22d3ee; }
-        .neon-RG { color: #f43f5e; border: 1px solid #f43f5e; }
-        .neon-A { color: #fbbf24; border: 1px solid #fbbf24; }
+        
+        /* ÖNEM DERECELERİ RENK TANIMLARI */
+        .prio-R  { background: #00f2fe; color: #000; } .neon-R  { color: #00f2fe; border: 1px solid #00f2fe; }
+        .prio-RG { background: #667eea; color: #fff; } .neon-RG { color: #667eea; border: 1px solid #667eea; }
+        .prio-RH { background: #b721ff; color: #fff; } .neon-RH { color: #b721ff; border: 1px solid #b721ff; }
+        .prio-RA { background: #21d4fd; color: #000; } .neon-RA { color: #21d4fd; border: 1px solid #21d4fd; }
+        .prio-A  { background: #f43f5e; color: #fff; } .neon-A  { color: #f43f5e; border: 1px solid #f43f5e; }
+        .prio-1  { background: #fbbf24; color: #000; } .neon-1  { color: #fbbf24; border: 1px solid #fbbf24; }
+        .prio-2  { background: #10b981; color: #fff; } .neon-2  { color: #10b981; border: 1px solid #10b981; }
+        .prio-3  { background: #64748b; color: #fff; } .neon-3  { color: #64748b; border: 1px solid #64748b; }
 
-        .prio-badge { font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 6px; cursor: pointer; }
-        .prio-R { background: #22d3ee; color: #000; } .prio-RG { background: #f43f5e; color: #fff; } .prio-A { background: #fbbf24; color: #000; }
-
-        .date-input { font-size: 10px; border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; padding: 2px; background: rgba(15,23,42,0.5); color: #fff; width: 100%; }
+        .prio-badge { font-size: 10px; font-weight: 800; padding: 4px 10px; border-radius: 8px; cursor: pointer; border: none; outline: none; }
         .custom-scroll::-webkit-scrollbar { width: 5px; }
         .custom-scroll::-webkit-scrollbar-thumb { background: #475569; border-radius: 10px; }
     </style>
@@ -41,11 +45,13 @@
     <div id="loginOverlay" class="fixed inset-0 flex items-center justify-center">
         <div class="bg-slate-900/50 p-10 rounded-[45px] border border-white/10 shadow-2xl w-[420px] text-center backdrop-blur-xl">
             <h2 class="text-white text-3xl font-extrabold mb-6">Sistem Girişi</h2>
-            <div id="cloudStatus" class="text-amber-400 text-xs font-bold mb-4 uppercase animate-pulse">Bulut Senkronize Ediliyor...</div>
-            <select id="personSelect" class="w-full p-4 outline-none mb-6"></select>
+            <div id="cloudStatus" class="text-amber-400 text-xs font-bold mb-4 uppercase animate-pulse">Bulut Verileri Alınıyor...</div>
+            <select id="personSelect" class="w-full p-4 outline-none mb-6">
+                <option value="">Lütfen Bekleyin...</option>
+            </select>
             <div class="grid grid-cols-2 gap-3 mb-6">
-                <button onclick="document.getElementById('restoreInput').click()" class="bg-slate-800 text-white text-[11px] py-3 rounded-xl"><i class="fa-solid fa-file-import mr-1"></i> JSON Yükle</button>
-                <button onclick="clearStorage()" class="bg-slate-800 text-rose-400 text-[11px] py-3 rounded-xl"><i class="fa-solid fa-sync mr-1"></i> Sıfırla</button>
+                <button onclick="document.getElementById('restoreInput').click()" class="bg-slate-800 text-white text-[11px] py-3 rounded-xl hover:bg-slate-700">JSON Yükle</button>
+                <button onclick="clearStorage()" class="bg-slate-800 text-rose-400 text-[11px] py-3 rounded-xl hover:bg-slate-700">Sistemi Sıfırla</button>
             </div>
             <button onclick="loginUser()" class="w-full bg-indigo-600 text-white font-black py-5 rounded-2xl shadow-xl hover:bg-indigo-500 transition">GİRİŞ YAP</button>
             <input type="file" id="restoreInput" accept=".json" class="hidden">
@@ -54,13 +60,13 @@
 
     <header class="w-full max-w-6xl flex flex-col md:flex-row justify-between items-center mb-10 z-10 gap-6 hidden" id="mainHeader">
         <div>
-            <h1 class="text-4xl font-black text-white tracking-tighter">TASK MANAGER</h1>
-            <p id="activeUserNameDisplay" class="text-indigo-400 font-bold uppercase"></p>
+            <h1 class="text-4xl font-black text-white tracking-tighter italic">TASK HUB</h1>
+            <p id="activeUserNameDisplay" class="text-indigo-400 font-bold uppercase tracking-widest text-sm"></p>
         </div>
-        <div class="flex gap-3 bg-slate-800/40 p-2 rounded-2xl border border-white/5 backdrop-blur-md">
-            <button onclick="generateReport(null)" class="bg-emerald-600 text-white px-4 py-2 rounded-xl font-bold text-sm"><i class="fa-solid fa-file-pdf mr-1"></i> Şirket Raporu</button>
-            <button onclick="syncData()" class="bg-indigo-600 text-white px-4 py-2 rounded-xl font-bold text-sm"><i class="fa-solid fa-cloud-arrow-up"></i> Kaydet</button>
-            <button onclick="logout()" class="bg-rose-500 text-white px-4 py-2 rounded-xl font-bold text-sm">Çıkış</button>
+        <div class="flex gap-3 bg-slate-800/40 p-2 rounded-2xl border border-white/5 backdrop-blur-md shadow-2xl">
+            <button onclick="generateReport(null)" class="bg-emerald-600 text-white px-5 py-2.5 rounded-xl font-bold text-xs"><i class="fa-solid fa-file-pdf mr-1"></i> Rapor Al</button>
+            <button onclick="syncData()" class="bg-indigo-600 text-white px-5 py-2.5 rounded-xl font-bold text-xs"><i class="fa-solid fa-cloud-arrow-up mr-1"></i> BULUTA KAYDET</button>
+            <button onclick="logout()" class="bg-rose-500 text-white px-5 py-2.5 rounded-xl font-bold text-xs">GÜVENLİ ÇIKIŞ</button>
         </div>
     </header>
 
@@ -69,37 +75,43 @@
     <div id="taskModal" class="fixed inset-0 bg-slate-950/80 hidden items-center justify-center z-[150] backdrop-blur-md p-4">
         <div class="bg-slate-900 w-full max-w-5xl rounded-[40px] shadow-2xl border border-white/10 flex flex-col max-h-[90vh]">
             <div class="p-6 bg-slate-800/50 border-b border-white/5 flex justify-between items-center">
-                <h2 id="modalTitle" class="text-2xl font-black text-white">Görevler</h2>
+                <h2 id="modalTitle" class="text-2xl font-black text-white">Görev Listesi</h2>
                 <div class="flex items-center gap-3">
-                    <select id="modalPrioFilter" onchange="renderTasks(currentUserId)" class="bg-slate-800 text-white border border-white/10 rounded-xl px-3 py-1.5 text-xs font-bold">
-                        <option value="all">Tüm Önem Dereceleri</option>
-                        <option value="R">R</option><option value="RG">RG</option><option value="A">A</option><option value="1">1</option>
+                    <select id="modalPrioFilter" onchange="renderTasks(currentUserId)" class="bg-slate-800 text-white border border-white/10 rounded-xl px-3 py-1.5 text-xs font-bold outline-none">
+                        <option value="all">Tüm Filtreler</option>
+                        <option value="R">R</option><option value="RG">RG</option><option value="RH">RH</option>
+                        <option value="RA">RA</option><option value="A">A</option><option value="1">1</option>
+                        <option value="2">2</option><option value="3">3</option>
                     </select>
-                    <button onclick="generateReport(currentUserId)" class="px-4 py-1.5 bg-indigo-600 text-white rounded-xl text-xs font-bold">PDF Rapor</button>
-                    <button onclick="closeModal()" class="text-slate-400 text-3xl">&times;</button>
+                    <button onclick="generateReport(currentUserId)" class="px-4 py-1.5 bg-indigo-600 text-white rounded-xl text-xs font-bold">Kişisel Rapor</button>
+                    <button onclick="closeModal()" class="text-slate-400 text-3xl hover:text-rose-500 transition-colors">&times;</button>
                 </div>
             </div>
             <div id="taskList" class="flex-1 overflow-y-auto p-6 custom-scroll"></div>
             <div class="p-6 bg-slate-800/30 border-t border-white/5 flex gap-2">
-                <select id="newPriorityInput" class="bg-slate-800 text-white border border-white/10 rounded-xl px-2 font-bold"><option value="R">R</option><option value="A">A</option><option value="1">1</option></select>
-                <input type="text" id="newTaskInput" placeholder="Yeni görev..." class="flex-1 p-3 bg-slate-800 text-white border border-white/10 rounded-xl outline-none">
-                <button onclick="addTask()" class="bg-indigo-600 text-white px-6 py-3 rounded-xl font-bold">EKLE</button>
+                <select id="newPriorityInput" class="bg-slate-800 text-white border border-white/10 rounded-xl px-3 font-bold outline-none">
+                    <option value="R">R</option><option value="RG">RG</option><option value="RH">RH</option><option value="RA">RA</option>
+                    <option value="A">A</option><option value="1">1</option><option value="2">2</option><option value="3">3</option>
+                </select>
+                <input type="text" id="newTaskInput" placeholder="Yapılacak işi buraya yazın..." class="flex-1 p-3 bg-slate-800 text-white border border-white/10 rounded-xl outline-none focus:border-indigo-500 transition-all">
+                <button onclick="addTask()" class="bg-indigo-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-indigo-500 shadow-lg">EKLE</button>
             </div>
         </div>
     </div>
 
     <div id="moveModal" class="fixed inset-0 bg-slate-900/60 hidden items-center justify-center z-[300] backdrop-blur-sm">
-        <div class="bg-slate-800 p-8 rounded-3xl w-80 text-center border border-white/10">
-            <h3 class="text-lg font-bold text-white mb-4">Görevi Transfer Et</h3>
-            <select id="moveTargetSelect" class="w-full p-3 bg-slate-700 text-white border border-white/10 rounded-xl mb-6"></select>
+        <div class="bg-slate-800 p-8 rounded-[35px] w-80 text-center border border-white/10 shadow-2xl">
+            <h3 class="text-lg font-bold text-white mb-4">Görevi Aktar</h3>
+            <select id="moveTargetSelect" class="w-full p-4 bg-slate-700 text-white border border-white/10 rounded-xl mb-6 font-bold outline-none"></select>
             <div class="flex justify-center gap-2">
-                <button onclick="closeMoveModal()" class="px-4 py-2 text-slate-400 font-bold">İptal</button>
-                <button onclick="confirmMove()" class="px-6 py-2 bg-indigo-600 text-white rounded-xl font-bold">Onayla</button>
+                <button onclick="closeMoveModal()" class="px-5 py-2 text-slate-400 font-bold">İptal</button>
+                <button onclick="confirmMove()" class="px-8 py-2 bg-indigo-600 text-white rounded-xl font-bold shadow-lg">Aktarımı Tamamla</button>
             </div>
         </div>
     </div>
 
     <script>
+        // FIREBASE LİNKİNİZ
         const FIREBASE_URL = "https://proje-id-varsayilan.firebaseio.com/veriler.json"; 
         const passList = { "SERHAT": "1111", "ALI": "2222", "MUHAMMED": "3333", "ABDULLAH": "4444", "BAHA": "5555", "MEHMET": "6666", "FATIH": "7777" };
 
@@ -108,6 +120,15 @@
         let isManagerMode = false;
         let taskToMoveIdx = null;
 
+        // --- ÇIKIŞ UYARISI SİSTEMİ ---
+        window.addEventListener('beforeunload', (e) => {
+            if (categories.length > 0) {
+                e.preventDefault();
+                e.returnValue = 'Kaydetmediğiniz değişiklikler kaybolabilir!';
+            }
+        });
+
+        // --- OTOMATİK BULUT YÜKLEMESİ ---
         async function loadData() {
             const statusText = document.getElementById('cloudStatus');
             try {
@@ -115,7 +136,7 @@
                 const data = await response.json();
                 if (data && Array.isArray(data)) {
                     categories = data;
-                    statusText.innerText = "Senkronizasyon Tamamlandı";
+                    statusText.innerText = "Bulut Verileri Senkronize Edildi";
                     statusText.className = "text-emerald-400 text-xs font-bold mb-4";
                 }
             } catch (err) { statusText.innerText = "Yerel Mod Aktif"; }
@@ -148,8 +169,8 @@
             const usersToShow = isManagerMode ? categories : categories.filter(c => c.id === currentUserId);
             container.innerHTML = usersToShow.map(cat => {
                 const counts = {}; cat.tasks.forEach(t => counts[t.priority] = (counts[t.priority] || 0) + 1);
-                const sidebar = `<div class="neon-sidebar">${["R","RG","A","1"].map(p => counts[p] ? `<div class="neon-tag neon-${p}">${p}:${counts[p]}</div>` : "").join('')}</div>`;
-                return `<div class="task-card" onclick="openModal(${cat.id})">${sidebar}<div class="p-6 flex flex-col justify-between flex-1"><h3 class="text-xl font-bold text-white">${cat.title}</h3><p class="text-slate-400 text-xs">${cat.tasks.length} Görev Kayıtlı</p></div></div>`;
+                const sidebar = `<div class="neon-sidebar">${["R","RG","RH","RA","A","1","2","3"].map(p => counts[p] ? `<div class="neon-tag neon-${p}">${p}:${counts[p]}</div>` : "").join('')}</div>`;
+                return `<div class="task-card" onclick="openModal(${cat.id})">${sidebar}<div class="p-6 flex flex-col justify-between flex-1"><h3 class="text-xl font-bold text-white tracking-tight">${cat.title}</h3><p class="text-indigo-400 text-[10px] font-black uppercase tracking-widest">${cat.tasks.length} AKTİF GÖREV</p></div></div>`;
             }).join('');
         }
 
@@ -160,63 +181,67 @@
             document.getElementById('taskList').innerHTML = cat.tasks.filter(t => filter === 'all' || t.priority === filter).map((t, i) => {
                 const realIdx = cat.tasks.indexOf(t);
                 return `
-                    <div class="p-5 bg-slate-800/50 border border-white/5 rounded-2xl mb-4">
+                    <div class="p-5 bg-slate-800/50 border border-white/5 rounded-3xl mb-4 transition-all hover:bg-slate-800">
                         <div class="flex justify-between items-center mb-3">
-                            <div class="flex items-center gap-3">
-                                <select onchange="updateTask(${uId}, ${realIdx}, 'priority', this.value)" class="prio-badge prio-${t.priority} border-none outline-none">
-                                    <option value="R" ${t.priority=='R'?'selected':''}>R</option><option value="RG" ${t.priority=='RG'?'selected':''}>RG</option><option value="A" ${t.priority=='A'?'selected':''}>A</option><option value="1" ${t.priority=='1'?'selected':''}>1</option>
+                            <div class="flex items-center gap-4">
+                                <select onchange="updateTask(${uId}, ${realIdx}, 'priority', this.value)" class="prio-badge prio-${t.priority}">
+                                    <option value="R" ${t.priority=='R'?'selected':''}>R</option><option value="RG" ${t.priority=='RG'?'selected':''}>RG</option>
+                                    <option value="RH" ${t.priority=='RH'?'selected':''}>RH</option><option value="RA" ${t.priority=='RA'?'selected':''}>RA</option>
+                                    <option value="A" ${t.priority=='A'?'selected':''}>A</option><option value="1" ${t.priority=='1'?'selected':''}>1</option>
+                                    <option value="2" ${t.priority=='2'?'selected':''}>2</option><option value="3" ${t.priority=='3'?'selected':''}>3</option>
                                 </select>
-                                <span class="text-white font-bold">${t.text}</span>
+                                <span class="text-white font-bold text-sm">${t.text}</span>
                             </div>
-                            <div class="flex gap-3 text-slate-400">
-                                <button onclick="editTask(${uId}, ${realIdx})"><i class="fa-solid fa-pen"></i></button>
-                                <button onclick="openMoveModal(${realIdx})"><i class="fa-solid fa-share-nodes"></i></button>
-                                <button onclick="deleteTask(${uId}, ${realIdx})" class="text-rose-500"><i class="fa-solid fa-trash-can"></i></button>
+                            <div class="flex gap-4 text-slate-500">
+                                <button onclick="editTask(${uId}, ${realIdx})" class="hover:text-indigo-400"><i class="fa-solid fa-pen-to-square"></i></button>
+                                <button onclick="openMoveModal(${realIdx})" class="hover:text-emerald-400"><i class="fa-solid fa-share-nodes"></i></button>
+                                <button onclick="deleteTask(${uId}, ${realIdx})" class="hover:text-rose-500"><i class="fa-solid fa-trash-can"></i></button>
                             </div>
                         </div>
-                        <textarea onchange="updateTask(${uId}, ${realIdx}, 'note', this.value)" class="w-full bg-slate-900 text-slate-300 text-xs p-3 rounded-xl border-none h-16 outline-none" placeholder="Notlar...">${t.note || ""}</textarea>
+                        <textarea onchange="updateTask(${uId}, ${realIdx}, 'note', this.value)" class="w-full bg-slate-900/50 text-slate-400 text-xs p-4 rounded-2xl border-none h-20 outline-none focus:ring-1 focus:ring-indigo-500/30" placeholder="İş detaylarını buraya not alabilirsiniz...">${t.note || ""}</textarea>
                     </div>`;
             }).join('');
         }
 
+        // --- DİĞER YÖNETİM FONKSİYONLARI ---
+        function updateTask(uId, i, f, v) { categories.find(c => c.id === uId).tasks[i][f] = v; saveToStorage(); }
+        function editTask(uId, i) { const cat = categories.find(c => c.id === uId); const val = prompt("Düzenle:", cat.tasks[i].text); if(val) { cat.tasks[i].text = val.toUpperCase(); renderTasks(uId); saveToStorage(); } }
+        function deleteTask(uId, i) { if(confirm("Görevi silmek istediğinize emin misiniz?")) { categories.find(c => c.id === uId).tasks.splice(i, 1); renderTasks(uId); renderCards(); saveToStorage(); } }
+        function addTask() {
+            const inp = document.getElementById('newTaskInput'); if (!inp.value) return;
+            const prio = document.getElementById('newPriorityInput').value;
+            categories.find(c => c.id === currentUserId).tasks.push({ text: inp.value.toUpperCase(), priority: prio, note: "", status: "Yapılıyor" });
+            inp.value = ''; renderTasks(currentUserId); renderCards(); saveToStorage();
+        }
         function generateReport(uId = null) {
             const data = uId ? categories.filter(c => c.id === uId) : categories;
-            let html = `<html><body style="font-family:sans-serif; padding:40px;"><h2>Task Report - ${new Date().toLocaleDateString()}</h2>`;
+            let html = `<html><body style="font-family:sans-serif; padding:40px; color:#333;"><h2>TASK REPORT - ${new Date().toLocaleDateString('tr-TR')}</h2>`;
             data.forEach(cat => {
-                html += `<h3>${cat.title}</h3><table border="1" width="100%" cellpadding="10" style="border-collapse:collapse; margin-bottom:20px;"><tr><th>Önem</th><th>Görev</th><th>Not</th></tr>`;
-                cat.tasks.forEach(t => { html += `<tr><td>${t.priority}</td><td>${t.text}</td><td>${t.note || '-'}</td></tr>`; });
+                html += `<h3 style="background:#f0f0f0; padding:10px;">${cat.title}</h3><table border="1" width="100%" cellpadding="10" style="border-collapse:collapse; margin-bottom:30px;"><tr style="background:#eee;"><th>Önem</th><th>Görev</th><th>Not</th></tr>`;
+                cat.tasks.forEach(t => { html += `<tr><td width="50" align="center"><b>${t.priority}</b></td><td>${t.text}</td><td style="font-size:11px; color:#666;">${t.note || '-'}</td></tr>`; });
                 html += `</table>`;
             });
             html += `<script>window.onload=function(){window.print(); window.close();}<\/script></body></html>`;
             const win = window.open('', '_blank'); win.document.write(html); win.document.close();
-        }
-
-        function updateTask(uId, i, f, v) { categories.find(c => c.id === uId).tasks[i][f] = v; saveToStorage(); }
-        function editTask(uId, i) { const cat = categories.find(c => c.id === uId); const val = prompt("Düzenle:", cat.tasks[i].text); if(val) { cat.tasks[i].text = val.toUpperCase(); renderTasks(uId); saveToStorage(); } }
-        function deleteTask(uId, i) { if(confirm("Silinsin mi?")) { categories.find(c => c.id === uId).tasks.splice(i, 1); renderTasks(uId); renderCards(); saveToStorage(); } }
-        function addTask() {
-            const inp = document.getElementById('newTaskInput'); if (!inp.value) return;
-            categories.find(c => c.id === currentUserId).tasks.push({ text: inp.value.toUpperCase(), priority: document.getElementById('newPriorityInput').value, note: "", status: "Yapılıyor" });
-            inp.value = ''; renderTasks(currentUserId); renderCards(); saveToStorage();
         }
         function openMoveModal(idx) { taskToMoveIdx = idx; document.getElementById('moveTargetSelect').innerHTML = categories.filter(c => c.id !== currentUserId).map(c => `<option value="${c.id}">${c.title}</option>`).join(''); document.getElementById('moveModal').classList.remove('hidden'); }
         function closeMoveModal() { document.getElementById('moveModal').classList.add('hidden'); }
         function confirmMove() { const targetId = parseFloat(document.getElementById('moveTargetSelect').value); const task = categories.find(c => c.id === currentUserId).tasks.splice(taskToMoveIdx, 1)[0]; categories.find(c => c.id === targetId).tasks.push(task); closeMoveModal(); renderTasks(currentUserId); renderCards(); saveToStorage(); }
         function updateLoginList() { document.getElementById('personSelect').innerHTML = '<option value="">İsim Seçin</option><option value="all">--- TÜMÜNÜ GÖR (YÖNETİCİ) ---</option>' + categories.map(c => `<option value="${c.id}">${c.title}</option>`).join(''); }
         function saveToStorage() { localStorage.setItem('yonetimData', JSON.stringify(categories)); }
-        function clearStorage() { if(confirm("Sıfırlansın mı?")) { localStorage.clear(); location.reload(); } }
-        async function syncData() { try { await fetch(FIREBASE_URL, { method: 'PUT', body: JSON.stringify(categories) }); alert("Bulut senkronize edildi!"); } catch (err) { alert("Hata!"); } }
-        function logout() { location.reload(); }
-        function openModal(id) { currentUserId = id; renderTasks(id); document.getElementById('taskModal').classList.replace('hidden', 'flex'); }
+        function clearStorage() { if(confirm("DİKKAT: Tüm hafıza temizlenecek!")) { localStorage.clear(); location.reload(); } }
+        async function syncData() { try { await fetch(FIREBASE_URL, { method: 'PUT', body: JSON.stringify(categories) }); alert("Bulut başarıyla güncellendi!"); } catch (err) { alert("Bağlantı hatası!"); } }
+        function logout() { if(confirm("Çıkış yapmadan önce verileri buluta kaydettiğinizden emin olun! Çıkılsın mı?")) location.reload(); }
+        function openModal(id) { currentUserId = id; document.getElementById('modalTitle').innerText = categories.find(c => c.id === id).title; renderTasks(id); document.getElementById('taskModal').classList.replace('hidden', 'flex'); }
         function closeModal() { document.getElementById('taskModal').classList.replace('flex', 'hidden'); renderCards(); }
         
-        // JSON Geri Yükleme Onarıldı
+        // JSON Geri Yükleme
         document.getElementById('restoreInput').addEventListener('change', function(e) {
             const reader = new FileReader();
             reader.onload = (ev) => {
                 categories = JSON.parse(ev.target.result);
                 saveToStorage(); updateLoginList();
-                alert("Yedek Yüklendi! Giriş yapabilirsiniz.");
+                alert("Yedek yüklendi! Giriş yapabilirsiniz.");
             };
             reader.readAsText(e.target.files[0]);
         });
