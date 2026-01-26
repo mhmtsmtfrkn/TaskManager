@@ -20,6 +20,7 @@
         #personSelect { background: #ffffff !important; color: #1e293b !important; border: 2px solid #6366f1; font-weight: 700; border-radius: 16px; }
         #personSelect option { color: #1e293b !important; background: #ffffff !important; }
 
+        /* YEŞİL NEON GÖREV KARTLARI */
         .task-card {
             background: rgba(255, 255, 255, 0.75); backdrop-filter: blur(15px); border: 1px solid rgba(16, 185, 129, 0.3);
             border-radius: 28px; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
@@ -126,7 +127,6 @@
         let isManagerMode = false;
         let taskToMoveIdx = null;
 
-        // --- TAM OTOMATİK VERİ ÇEKME ---
         async function loadData() {
             const statusText = document.getElementById('cloudStatus');
             const statusDot = document.getElementById('statusDot');
@@ -135,15 +135,20 @@
                 const response = await fetch(FIREBASE_URL);
                 let data = await response.json();
                 
-                // Veri undefined veya boşsa hafızaya bak
+                // DATA UNDEFINED KONTROLÜ VE FORMAT DÜZELTME
                 if (data) {
-                    if (!Array.isArray(data)) data = Object.values(data);
+                    if (!Array.isArray(data)) {
+                        data = Object.values(data);
+                    }
+                    // Boş veri gelirse yereli kullan
+                    if (data.length === 0) throw new Error("Boş veri");
+                    
                     categories = data;
                     saveToStorage();
                     statusText.innerText = "Bulut Senkronizasyonu Başarılı";
                     statusDot.className = "w-2.5 h-2.5 rounded-full bg-emerald-500";
                 } else {
-                    throw new Error("Boş Veri");
+                    throw new Error("Veri çekilemedi");
                 }
             } catch (err) {
                 const local = localStorage.getItem('yonetimData');
@@ -158,11 +163,16 @@
             updateLoginList();
         }
 
-        // --- GİRİŞ ANINDA SIFIRLANMAYI ENGELLEYEN YAPI ---
         async function loginUser() {
             const select = document.getElementById('personSelect');
             if (!select.value || select.value === "") return alert("Lütfen bir isim seçin!");
             
+            // Girişten önce veriyi tekrar garantiye al
+            if (categories.length === 0) {
+                const local = localStorage.getItem('yonetimData');
+                if(local) categories = JSON.parse(local);
+            }
+
             if (select.value === "all") {
                 if (prompt("Yönetici Şifresi:") !== ADMIN_PASS) return alert("Hatalı!");
                 isManagerMode = true;
@@ -184,10 +194,9 @@
             renderCards();
         }
 
-        // --- JSON YEDEK YÜKLEME VE BULUTA KİLİTLEME ---
         document.getElementById('restoreInput').addEventListener('change', function(e) {
             const reader = new FileReader();
-            reader.onload = async (ev) => {
+            reader.onload = (ev) => {
                 try {
                     const data = JSON.parse(ev.target.result);
                     if (Array.isArray(data)) {
@@ -201,7 +210,6 @@
             reader.readAsText(e.target.files[0]);
         });
 
-        // --- FONKSİYONLAR ---
         function renderCards() {
             const container = document.getElementById('cardContainer');
             const usersToShow = isManagerMode ? categories : categories.filter(c => c.id === currentUserId);
@@ -218,7 +226,7 @@
             const cat = categories.find(c => c.id === uId);
             document.getElementById('taskList').innerHTML = cat.tasks.filter(t => filter === 'all' || t.priority === filter).map((t, i) => {
                 const realIdx = cat.tasks.indexOf(t);
-                return `<div class="task-item-row"><div class="flex justify-between items-center mb-4"><div class="flex items-center gap-4"><select onchange="updateTask(${uId}, ${realIdx}, 'priority', this.value)" class="prio-badge prio-${t.priority}"><option value="R" ${t.priority=='R'?'selected':''}>R</option><option value="RG" ${t.priority=='RG'?'selected':''}>RG</option><option value="RH" ${t.priority=='RH'?'selected':''}>RH</option><option value="RA" ${t.priority=='RA'?'selected':''}>RA</option><option value="A" ${t.priority=='A'?'selected':''}>A</option><option value="1" ${t.priority=='1'?'selected':''}>1</option><option value="2" ${t.priority=='2'?'selected':''}>2</option><option value="3" ${t.priority=='3'?'selected':''}>3</option></select><span class="text-slate-800 font-bold">${t.text}</span></div><div class="flex gap-4 text-slate-400"><button onclick="editTask(${uId}, ${realIdx})"><i class="fa-solid fa-pen"></i></button><button onclick="openMoveModal(${realIdx})"><i class="fa-solid fa-share-nodes"></i></button><button onclick="deleteTask(${uId}, ${realIdx})" class="text-rose-500"><i class="fa-solid fa-trash"></i></button></div></div><textarea onchange="updateTask(${uId}, ${realIdx}, 'note', this.value)" class="w-full bg-slate-50 text-slate-500 text-xs p-4 rounded-2xl border h-20 outline-none focus:border-indigo-300" placeholder="Notlar...">${t.note || ""}</textarea></div>`;
+                return `<div class="task-item-row"><div class="flex justify-between items-center mb-4"><div class="flex items-center gap-4"><select onchange="updateTask(${uId}, ${realIdx}, 'priority', this.value)" class="prio-badge prio-${t.priority}"><option value="R" ${t.priority=='R'?'selected':''}>R</option><option value="RG" ${t.priority=='RG'?'selected':''}>RG</option><option value="RH" ${t.priority=='RH'?'selected':''}>RH</option><option value="RA" ${t.priority=='RA'?'selected':''}>RA</option><option value="A" ${t.priority=='A'?'selected':''}>A</option><option value="1" ${t.priority=='1'?'selected':''}>1</option><option value="2" ${t.priority=='2'?'selected':''}>2</option><option value="3" ${t.priority=='3'?'selected':''}>3</option></select><span class="text-slate-800 font-bold">${t.text}</span></div><div class="flex gap-4 text-slate-400"><button onclick="editTask(${uId}, ${realIdx})"><i class="fa-solid fa-pen"></i></button><button onclick="openMoveModal(${realIdx})"><i class="fa-solid fa-share-nodes"></i></button><button onclick="deleteTask(${uId}, ${realIdx})" class="text-rose-500"><i class="fa-solid fa-trash"></i></button></div></div><textarea onchange="updateTask(${uId}, ${realIdx}, 'note', this.value)" class="w-full bg-slate-50 text-slate-500 text-xs p-4 rounded-2xl border h-20 outline-none focus:border-indigo-300" placeholder="İş notları...">${t.note || ""}</textarea></div>`;
             }).join('');
         }
 
@@ -238,7 +246,7 @@
             select.innerHTML = '<option value="">İsim Seçin</option><option value="all">--- YÖNETİCİ ---</option>' + categories.map(c => `<option value="${c.id}">${c.title}</option>`).join(''); 
         }
         function saveToStorage() { localStorage.setItem('yonetimData', JSON.stringify(categories)); }
-        function clearStorage() { if(confirm("Sıfırlansın mı?")) { localStorage.clear(); location.reload(); } }
+        function clearStorage() { if(confirm("Hafıza temizlenecek!")) { localStorage.clear(); location.reload(); } }
         async function syncData() { try { await fetch(FIREBASE_URL, { method: 'PUT', body: JSON.stringify(categories) }); alert("Bulut senkronize edildi!"); } catch (err) { alert("Hata!"); } }
         function logout() { location.reload(); }
         function openModal(id) { currentUserId = id; document.getElementById('modalTitle').innerText = categories.find(c => c.id === id).title; renderTasks(id); document.getElementById('taskModal').classList.replace('hidden', 'flex'); }
