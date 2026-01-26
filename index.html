@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Task Hub Pro - Kesin Şifre Çözümü</title>
+    <title>Task Hub Pro - Kesin Veri Kilidi</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -18,10 +18,9 @@
 
         #loginOverlay { background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(20px); z-index: 1000; }
         #personSelect { background: #ffffff !important; color: #1e293b !important; border: 2px solid #6366f1; font-weight: 700; border-radius: 16px; }
-        #personSelect option { color: #1e293b !important; background: #ffffff !important; }
 
         .task-card {
-            background: rgba(255, 255, 255, 0.75); backdrop-filter: blur(15px); border: 1px solid rgba(16, 185, 129, 0.4);
+            background: rgba(255, 255, 255, 0.75); backdrop-filter: blur(15px); border: 1px solid rgba(16, 185, 129, 0.3);
             border-radius: 28px; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             height: 200px; display: flex; overflow: hidden; cursor: pointer; position: relative;
             box-shadow: 0 0 25px rgba(16, 185, 129, 0.3); 
@@ -55,10 +54,10 @@
             <h2 class="text-white text-3xl font-extrabold mb-6 italic uppercase tracking-widest">TASK HUB PRO</h2>
             <div class="flex items-center justify-center gap-2 mb-4">
                 <div id="statusDot" class="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse"></div>
-                <p id="cloudStatus" class="text-amber-400 text-xs font-bold uppercase">ŞİFRE KONTROLÜ AKTİF...</p>
+                <p id="cloudStatus" class="text-amber-400 text-xs font-bold uppercase">SİSTEM KONTROL EDİLİYOR...</p>
             </div>
             <select id="personSelect" class="w-full p-4 outline-none mb-6">
-                <option value="">Lütfen Bekleyin...</option>
+                <option value="">İsimler Bekleniyor...</option>
             </select>
             <div class="grid grid-cols-2 gap-3 mb-6">
                 <button onclick="document.getElementById('restoreInput').click()" class="bg-slate-800 text-white text-[11px] py-3 rounded-xl hover:bg-slate-700 transition">JSON YÜKLE</button>
@@ -75,7 +74,6 @@
             <p id="activeUserNameDisplay" class="text-indigo-600 font-bold uppercase text-sm tracking-widest"></p>
         </div>
         <div class="flex gap-3 bg-white/60 p-2 rounded-2xl border border-white backdrop-blur-md shadow-sm">
-            <button onclick="generateReport(null)" class="bg-emerald-500 text-white px-5 py-2.5 rounded-xl font-bold text-xs hover:bg-emerald-600 transition">RAPOR AL</button>
             <button onclick="syncData()" class="bg-indigo-600 text-white px-5 py-2.5 rounded-xl font-bold text-xs hover:bg-indigo-700 transition">BULUTA KAYDET</button>
             <button onclick="logout()" class="bg-rose-500 text-white px-5 py-2.5 rounded-xl font-bold text-xs hover:bg-rose-600 transition">ÇIKIŞ</button>
         </div>
@@ -84,40 +82,22 @@
     <div id="cardContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 w-full max-w-6xl z-10 pb-12 hidden"></div>
 
     <div id="taskModal" class="fixed inset-0 bg-slate-900/40 hidden items-center justify-center z-[150] backdrop-blur-sm p-4">
-        <div class="bg-white w-full max-w-5xl rounded-[40px] shadow-2xl border border-white/10 flex flex-col max-h-[90vh]">
+        <div class="bg-white w-full max-w-5xl rounded-[40px] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
             <div class="p-8 bg-slate-50 border-b flex justify-between items-center">
                 <h2 id="modalTitle" class="text-2xl font-black text-slate-800">Görev Listesi</h2>
-                <div class="flex items-center gap-4">
-                    <select id="modalPrioFilter" onchange="renderTasks(currentUserId)" class="bg-white border rounded-xl px-4 py-2 text-xs font-bold shadow-sm outline-none">
-                        <option value="all">Filtrele</option>
-                        <option value="R">R</option><option value="RG">RG</option><option value="RH">RH</option><option value="RA">RA</option><option value="A">A</option><option value="1">1</option><option value="2">2</option><option value="3">3</option>
-                    </select>
-                    <button onclick="generateReport(currentUserId)" class="px-5 py-2 bg-indigo-600 text-white rounded-xl text-xs font-bold shadow-lg">PDF</button>
-                    <button onclick="closeModal()" class="text-slate-400 text-3xl hover:text-rose-500 transition-colors">&times;</button>
-                </div>
+                <button onclick="closeModal()" class="text-slate-400 text-3xl hover:text-rose-500 transition-colors">&times;</button>
             </div>
             <div id="taskList" class="flex-1 overflow-y-auto p-8 custom-scroll bg-slate-50"></div>
             <div class="p-6 bg-slate-50 border-t flex gap-3">
                 <select id="newPriorityInput" class="bg-white border rounded-xl px-4 font-bold outline-none shadow-sm"><option value="R">R</option><option value="RG">RG</option><option value="RH">RH</option><option value="RA">RA</option><option value="A">A</option><option value="1">1</option><option value="2">2</option><option value="3" selected>3</option></select>
-                <input type="text" id="newTaskInput" placeholder="Yeni görev ekle..." class="flex-1 p-4 bg-white border rounded-xl outline-none focus:border-indigo-500 shadow-sm transition-all">
+                <input type="text" id="newTaskInput" placeholder="Yeni görev..." class="flex-1 p-4 bg-white border rounded-xl outline-none focus:border-indigo-500 shadow-sm transition-all">
                 <button onclick="addTask()" class="bg-indigo-600 text-white px-10 py-4 rounded-xl font-bold hover:bg-indigo-700 shadow-lg transition">EKLE</button>
             </div>
         </div>
     </div>
 
-    <div id="moveModal" class="fixed inset-0 bg-slate-900/60 hidden items-center justify-center z-[300] backdrop-blur-sm">
-        <div class="bg-white p-10 rounded-[40px] w-96 text-center shadow-2xl border">
-            <h3 class="text-xl font-bold text-slate-800 mb-6">Görevi Aktar</h3>
-            <select id="moveTargetSelect" class="w-full p-4 bg-slate-50 border rounded-xl mb-8 font-bold outline-none"></select>
-            <div class="flex justify-center gap-4">
-                <button onclick="closeMoveModal()" class="px-6 py-2 text-slate-400 font-bold">İptal</button>
-                <button onclick="confirmMove()" class="px-10 py-3 bg-indigo-600 text-white rounded-xl font-bold shadow-lg">ONAYLA</button>
-            </div>
-        </div>
-    </div>
-
     <script>
-        // FIREBASE LİNKİNİZ
+        // KENDİ FIREBASE LİNKİNİZ
         const FIREBASE_URL = "https://proje-id-varsayilan.firebaseio.com/veriler.json"; 
         const ADMIN_PASS = "0571";
         const passList = { "SERHAT": "1111", "ALI": "2222", "ALİ": "2222", "MUHAMMED": "3333", "ABDULLAH": "4444", "BAHA": "5555", "MEHMET": "6666", "FATIH": "7777", "FATİH": "7777" };
@@ -125,62 +105,55 @@
         let categories = [];
         let currentUserId = null; 
         let isManagerMode = false;
-        let taskToMoveIdx = null;
 
+        // --- GELİŞMİŞ GÜVENLİ YÜKLEME ---
         async function loadData() {
             const statusText = document.getElementById('cloudStatus');
             const statusDot = document.getElementById('statusDot');
+            
+            // 1. Önce hafızayı göster (Boş veri döngüsünü durdurur)
+            const local = localStorage.getItem('yonetimData');
+            if(local && local !== "[]") {
+                categories = JSON.parse(local);
+                updateLoginList();
+                statusText.innerText = "Hafıza Hazır";
+            }
+
             try {
+                // 2. Bulutu sorgula
                 const response = await fetch(FIREBASE_URL);
                 let data = await response.json();
-                if (data) {
-                    if (!Array.isArray(data)) data = Object.values(data);
-                    const cleanData = data.filter(item => item && item.title && item.title !== "undefined");
-                    if (cleanData.length > 0) {
-                        categories = cleanData;
-                        saveToStorage();
-                        statusText.innerText = "Bulut Senkronize Edildi";
-                        statusDot.className = "w-2.5 h-2.5 rounded-full bg-emerald-500";
-                    }
+                if (data && !Array.isArray(data)) data = Object.values(data);
+                
+                // 3. EĞER BULUTTA GERÇEKTEN VERİ VARSA ÜSTÜNE YAZ
+                if (data && data.length > 0 && data[0].title !== "undefined") {
+                    categories = data;
+                    saveToStorage();
+                    updateLoginList();
+                    statusText.innerText = "Bulut Senkronize Edildi";
+                    statusDot.className = "w-2.5 h-2.5 rounded-full bg-emerald-500";
                 }
             } catch (err) {
-                const local = localStorage.getItem('yonetimData');
-                if(local) categories = JSON.parse(local);
-                statusText.innerText = "Yerel Veri Aktif";
-                statusDot.className = "w-2.5 h-2.5 rounded-full bg-indigo-500 animate-none";
+                statusText.innerText = "Çevrimdışı Mod";
             }
             updateLoginList();
         }
 
-        // --- GÜÇLENDİRİLMİŞ ŞİFRE KONTROL MEKANİZMASI ---
         async function loginUser() {
             const select = document.getElementById('personSelect');
-            if (!select.value || select.value === "") return alert("Lütfen bir isim seçin!");
+            if (!select.value || select.value === "") return alert("Lütfen isim seçin!");
             
             if (select.value === "all") {
-                const adminPass = prompt("Yönetici Şifresi:");
-                if (adminPass && adminPass.toString().trim() === ADMIN_PASS) {
-                    isManagerMode = true;
-                } else return alert("Hatalı Şifre!");
+                if (prompt("Yönetici Şifresi:") !== ADMIN_PASS) return alert("Hatalı!");
+                isManagerMode = true;
             } else {
                 isManagerMode = false;
                 currentUserId = parseFloat(select.value);
                 const user = categories.find(c => c.id === currentUserId);
-                if(!user) return alert("Personel bulunamadı! Sayfayı yenileyin.");
-
-                const inputPass = prompt(`${user.title} şifresi:`);
-                if (!inputPass) return;
-
-                // KESİN DOĞRULAMA (Boşluk temizleme, metne çevirme, yedek liste kontrolü)
-                const cleanInput = inputPass.toString().trim();
-                const cloudPass = user.password ? user.password.toString().trim() : "";
-                const backupPass = passList[user.title.toUpperCase()] || "1234";
-
-                if (cleanInput === cloudPass || cleanInput === backupPass) {
-                    document.getElementById('activeUserNameDisplay').innerText = user.title;
-                } else {
-                    return alert("Şifre Yanlış! Lütfen tekrar deneyin.");
-                }
+                const pass = prompt(`${user.title} şifresi:`);
+                const expected = (user.password || passList[user.title.toUpperCase()] || "1234").toString().trim();
+                if (!pass || pass.trim() !== expected) return alert("Hatalı Şifre!");
+                document.getElementById('activeUserNameDisplay').innerText = user.title;
             }
             
             document.getElementById('loginOverlay').classList.add('hidden');
@@ -189,66 +162,53 @@
             renderCards();
         }
 
+        function syncData() {
+            if(confirm("Veriler buluta kaydedilecek. Devam?")) {
+                fetch(FIREBASE_URL, { method: 'PUT', body: JSON.stringify(categories) })
+                .then(() => alert("Başarıyla Kaydedildi!"))
+                .catch(() => alert("Hata!"));
+            }
+        }
+
         function renderCards() {
             const container = document.getElementById('cardContainer');
             const usersToShow = isManagerMode ? categories : categories.filter(c => c.id === currentUserId);
             container.innerHTML = usersToShow.map(cat => {
                 const counts = {}; cat.tasks.forEach(t => counts[t.priority] = (counts[t.priority] || 0) + 1);
                 const sidebar = `<div class="neon-sidebar">${["R","RG","RH","RA","A","1","2","3"].map(p => counts[p] ? `<div class="neon-tag neon-${p}">${p}:${counts[p]}</div>` : "").join('')}</div>`;
-                return `<div class="task-card" onclick="openModal(${cat.id})">${sidebar}<div class="p-6 flex flex-col justify-between flex-1"><h3 class="text-xl font-bold text-slate-800">${cat.title}</h3><p class="text-indigo-400 text-xs font-black uppercase tracking-widest">${cat.tasks.length} Görev Listelendi</p></div></div>`;
+                return `<div class="task-card" onclick="openModal(${cat.id})">${sidebar}<div class="p-6 flex flex-col justify-between flex-1"><h3 class="text-xl font-bold text-slate-800">${cat.title}</h3><p class="text-indigo-400 text-xs font-black uppercase">${cat.tasks.length} Görev</p></div></div>`;
             }).join('');
         }
 
         function renderTasks(uId) {
             currentUserId = uId;
-            const filter = document.getElementById('modalPrioFilter').value;
             const cat = categories.find(c => c.id === uId);
-            document.getElementById('taskList').innerHTML = cat.tasks.filter(t => filter === 'all' || t.priority === filter).map((t, i) => {
-                const realIdx = cat.tasks.indexOf(t);
-                return `<div class="task-item-row"><div class="flex justify-between items-center mb-4"><div class="flex items-center gap-4"><select onchange="updateTask(${uId}, ${realIdx}, 'priority', this.value)" class="prio-badge prio-${t.priority}"><option value="R" ${t.priority=='R'?'selected':''}>R</option><option value="RG" ${t.priority=='RG'?'selected':''}>RG</option><option value="RH" ${t.priority=='RH'?'selected':''}>RH</option><option value="RA" ${t.priority=='RA'?'selected':''}>RA</option><option value="A" ${t.priority=='A'?'selected':''}>A</option><option value="1" ${t.priority=='1'?'selected':''}>1</option><option value="2" ${t.priority=='2'?'selected':''}>2</option><option value="3" ${t.priority=='3'?'selected':''}>3</option></select><span class="text-slate-800 font-bold">${t.text}</span></div><div class="flex gap-4 text-slate-400"><button onclick="editTask(${uId}, ${realIdx})"><i class="fa-solid fa-pen"></i></button><button onclick="openMoveModal(${realIdx})"><i class="fa-solid fa-share-nodes"></i></button><button onclick="deleteTask(${uId}, ${realIdx})" class="text-rose-500"><i class="fa-solid fa-trash"></i></button></div></div><textarea onchange="updateTask(${uId}, ${realIdx}, 'note', this.value)" class="w-full bg-slate-50 text-slate-500 text-xs p-4 rounded-2xl border h-20 outline-none focus:border-indigo-300" placeholder="İş detayları...">${t.note || ""}</textarea></div>`;
-            }).join('');
+            document.getElementById('taskList').innerHTML = cat.tasks.map((t, i) => `
+                <div class="task-item-row"><div class="flex justify-between items-center mb-4"><div class="flex items-center gap-4"><span class="prio-badge prio-${t.priority}">${t.priority}</span><span class="text-slate-800 font-bold">${t.text}</span></div><button onclick="deleteTask(${uId}, ${i})" class="text-rose-500"><i class="fa-solid fa-trash"></i></button></div><textarea onchange="updateTask(${uId}, ${i}, 'note', this.value)" class="w-full bg-slate-50 text-slate-500 text-xs p-4 rounded-2xl border h-20 outline-none" placeholder="Notlar...">${t.note || ""}</textarea></div>
+            `).join('');
         }
 
         function updateTask(uId, i, f, v) { categories.find(c => c.id === uId).tasks[i][f] = v; saveToStorage(); }
-        function editTask(uId, i) { const cat = categories.find(c => c.id === uId); const val = prompt("Düzenle:", cat.tasks[i].text); if(val) { cat.tasks[i].text = val.toUpperCase(); renderTasks(uId); saveToStorage(); } }
         function deleteTask(uId, i) { if(confirm("Silinsin mi?")) { categories.find(c => c.id === uId).tasks.splice(i, 1); renderTasks(uId); renderCards(); saveToStorage(); } }
         function addTask() {
             const inp = document.getElementById('newTaskInput'); if (!inp.value) return;
             categories.find(c => c.id === currentUserId).tasks.push({ text: inp.value.toUpperCase(), priority: document.getElementById('newPriorityInput').value, note: "", status: "Yapılıyor" });
             inp.value = ''; renderTasks(currentUserId); renderCards(); saveToStorage();
         }
-        function openMoveModal(idx) { taskToMoveIdx = idx; document.getElementById('moveTargetSelect').innerHTML = categories.filter(c => c.id !== currentUserId).map(c => `<option value="${c.id}">${c.title}</option>`).join(''); document.getElementById('moveModal').classList.remove('hidden'); }
-        function closeMoveModal() { document.getElementById('moveModal').classList.add('hidden'); }
-        function confirmMove() { const targetId = parseFloat(document.getElementById('moveTargetSelect').value); const task = categories.find(c => c.id === currentUserId).tasks.splice(taskToMoveIdx, 1)[0]; categories.find(c => c.id === targetId).tasks.push(task); closeMoveModal(); renderTasks(currentUserId); renderCards(); saveToStorage(); }
         function updateLoginList() { document.getElementById('personSelect').innerHTML = '<option value="">İsim Seçin</option><option value="all">--- YÖNETİCİ ---</option>' + categories.map(c => `<option value="${c.id}">${c.title}</option>`).join(''); }
         function saveToStorage() { localStorage.setItem('yonetimData', JSON.stringify(categories)); }
-        function clearStorage() { if(confirm("Tüm veriler temizlenecek!")) { localStorage.clear(); location.reload(); } }
-        async function syncData() { try { await fetch(FIREBASE_URL, { method: 'PUT', body: JSON.stringify(categories) }); alert("Bulut senkronize edildi!"); } catch (err) { alert("Hata!"); } }
+        function clearStorage() { if(confirm("Hafıza sıfırlansın mı?")) { localStorage.clear(); location.reload(); } }
         function logout() { location.reload(); }
         function openModal(id) { currentUserId = id; document.getElementById('modalTitle').innerText = categories.find(c => c.id === id).title; renderTasks(id); document.getElementById('taskModal').classList.replace('hidden', 'flex'); }
         function closeModal() { document.getElementById('taskModal').classList.replace('flex', 'hidden'); renderCards(); }
-        function generateReport(uId = null) {
-            const data = uId ? categories.filter(c => c.id === uId) : categories;
-            let html = `<html><body style="font-family:sans-serif; padding:40px;"><h2>Task Report</h2>`;
-            data.forEach(cat => {
-                html += `<h3>${cat.title}</h3><table border="1" width="100%" cellpadding="10" style="border-collapse:collapse; margin-bottom:20px;"><tr><th>Önem</th><th>Görev</th><th>Not</th></tr>`;
-                cat.tasks.forEach(t => { html += `<tr><td>${t.priority}</td><td>${t.text}</td><td>${t.note || '-'}</td></tr>`; });
-                html += `</table>`;
-            });
-            html += `<script>window.onload=function(){window.print(); window.close();}<\/script></body></html>`;
-            const win = window.open('', '_blank'); win.document.write(html); win.document.close();
-        }
-
-        window.onload = loadData;
         
         document.getElementById('restoreInput').addEventListener('change', function(e) {
             const reader = new FileReader();
-            reader.onload = (ev) => {
-                const data = JSON.parse(ev.target.result);
-                if (Array.isArray(data)) { categories = data; saveToStorage(); updateLoginList(); alert("Yedek Yüklendi!"); }
-            };
+            reader.onload = (ev) => { categories = JSON.parse(ev.target.result); saveToStorage(); updateLoginList(); alert("Yüklendi!"); };
             reader.readAsText(e.target.files[0]);
         });
+
+        window.onload = loadData;
     </script>
 </body>
 </html>
