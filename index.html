@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TaskManager Pro - Modern Dashboard</title>
+    <title>TaskManager Pro - Neon Edition</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -13,7 +13,6 @@
     <style>
         body { font-family: 'Outfit', sans-serif; background: #f0f2f5; min-height: 100vh; color: #1f2937; position: relative; padding-bottom: 140px; overflow-x: hidden; }
         
-        /* CANLI VE RENKLİ ARKA PLAN EFEKTLERİ */
         .bg-shape { position: fixed; border-radius: 50%; filter: blur(80px); z-index: -1; opacity: 0.6; animation: floatBackground 10s infinite alternate; }
         .shape-1 { top: -10%; left: -10%; width: 600px; height: 600px; background: #a78bfa; }
         .shape-2 { bottom: -10%; right: -10%; width: 500px; height: 500px; background: #f472b6; }
@@ -22,18 +21,25 @@
         #loginOverlay { background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(20px); z-index: 1000; }
         #personSelect { background: #ffffff !important; color: #1e293b !important; border: 2px solid #6366f1; font-weight: 700; border-radius: 16px; }
 
-        /* MODERN CAM KART TASARIMI */
+        /* YEŞİL NEON EFEKTLİ GÖREV KARTLARI */
         .task-card {
             background: rgba(255, 255, 255, 0.75); backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.5);
-            border-radius: 28px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03); transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border-radius: 28px; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             height: 200px; display: flex; overflow: hidden; cursor: pointer; position: relative;
+            /* Sabit Neon Parlama */
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.2); 
         }
-        .task-card:hover { transform: translateY(-10px); background: rgba(255, 255, 255, 0.95); box-shadow: 0 20px 40px rgba(99, 102, 241, 0.1); border-color: #6366f1; }
+        .task-card:hover { 
+            transform: translateY(-10px); 
+            background: rgba(255, 255, 255, 0.95); 
+            /* Hover Durumunda Yoğun Yeşil Neon */
+            box-shadow: 0 0 25px rgba(16, 185, 129, 0.5), 0 10px 30px rgba(99, 102, 241, 0.1); 
+            border-color: #10b981; 
+        }
         
         .neon-sidebar { width: 50px; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; border-right: 1px solid rgba(0,0,0,0.05); background: rgba(0,0,0,0.02); }
         .neon-tag { font-size: 9px; font-weight: 800; width: 36px; height: 18px; display: flex; align-items: center; justify-content: center; border-radius: 6px; }
         
-        /* ÖNEM DERECELERİ RENKLERİ */
         .prio-R  { background: #00f2fe; color: #000; } .neon-R  { color: #00f2fe; border: 1px solid #00f2fe; }
         .prio-RG { background: #667eea; color: #fff; } .neon-RG { color: #667eea; border: 1px solid #667eea; }
         .prio-RH { background: #b721ff; color: #fff; } .neon-RH { color: #b721ff; border: 1px solid #b721ff; }
@@ -43,7 +49,6 @@
         .prio-2  { background: #10b981; color: #fff; } .neon-2  { color: #10b981; border: 1px solid #10b981; }
         .prio-3  { background: #64748b; color: #fff; } .neon-3  { color: #64748b; border: 1px solid #64748b; }
 
-        /* KPI PANELİ */
         .kpi-container { position: fixed; bottom: 25px; left: 50%; transform: translateX(-50%); width: auto; z-index: 100; display: flex; gap: 15px; }
         .kpi-card { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(20px); border: 1px solid #fff; padding: 15px 25px; border-radius: 30px; display: flex; align-items: center; gap: 15px; box-shadow: 0 15px 35px rgba(0,0,0,0.1); border-bottom: 4px solid #6366f1; }
 
@@ -68,7 +73,7 @@
                 <button onclick="document.getElementById('restoreInput').click()" class="bg-slate-800 text-white text-[11px] py-3 rounded-xl hover:bg-slate-700">JSON Yükle</button>
                 <button onclick="clearStorage()" class="bg-slate-800 text-rose-400 text-[11px] py-3 rounded-xl hover:bg-slate-700">Sıfırla</button>
             </div>
-            <button onclick="loginUser()" class="w-full bg-indigo-600 text-white font-black py-5 rounded-2xl shadow-xl hover:bg-indigo-500 transition">SİSTEME GİRİŞ</button>
+            <button onclick="loginUser()" class="w-full bg-indigo-600 text-white font-black py-5 rounded-2xl shadow-xl hover:bg-indigo-500 transition">GİRİŞ YAP</button>
             <input type="file" id="restoreInput" accept=".json" class="hidden">
         </div>
     </div>
@@ -103,7 +108,7 @@
                 <h2 id="modalTitle" class="text-2xl font-black text-slate-800">Görev Listesi</h2>
                 <div class="flex items-center gap-4">
                     <select id="modalPrioFilter" onchange="renderTasks(currentUserId)" class="bg-white border rounded-xl px-4 py-2 text-xs font-bold shadow-sm outline-none">
-                        <option value="all">Tüm Önem Dereceleri</option>
+                        <option value="all">Tümü</option>
                         <option value="R">R</option><option value="RG">RG</option><option value="RH">RH</option><option value="RA">RA</option><option value="A">A</option><option value="1">1</option><option value="2">2</option><option value="3">3</option>
                     </select>
                     <button onclick="generateReport(currentUserId)" class="px-5 py-2 bg-indigo-600 text-white rounded-xl text-xs font-bold hover:bg-indigo-700 shadow-md transition">PDF Rapor</button>
@@ -207,6 +212,12 @@
             document.getElementById('personalPerfScore').innerText = `%${totalPerf}`;
         }
 
+        function calculatePerformance(tasks) {
+            const h = tasks.filter(t => (t.priority === 'A' || t.priority === '1'));
+            if (!h.length) return 100;
+            return 100; 
+        }
+
         function renderTasks(uId) {
             currentUserId = uId;
             const filter = document.getElementById('modalPrioFilter').value;
@@ -228,15 +239,9 @@
                                 <button onclick="deleteTask(${uId}, ${realIdx})" class="hover:text-rose-500 transition-colors"><i class="fa-solid fa-trash-can"></i></button>
                             </div>
                         </div>
-                        <textarea onchange="updateTask(${uId}, ${realIdx}, 'note', this.value)" class="w-full bg-white text-slate-500 text-xs p-4 rounded-2xl border border-slate-100 h-20 outline-none focus:border-indigo-300" placeholder="İş detaylarını not alın...">${t.note || ""}</textarea>
+                        <textarea onchange="updateTask(${uId}, ${realIdx}, 'note', this.value)" class="w-full bg-white text-slate-500 text-xs p-4 rounded-2xl border border-slate-100 h-20 outline-none focus:border-indigo-300" placeholder="Notlar...">${t.note || ""}</textarea>
                     </div>`;
             }).join('');
-        }
-
-        function calculatePerformance(tasks) {
-            const h = tasks.filter(t => (t.priority === 'A' || t.priority === '1'));
-            if (!h.length) return 100;
-            return 100; // Örnek performans mantığı
         }
 
         function updateTask(uId, i, f, v) { categories.find(c => c.id === uId).tasks[i][f] = v; saveToStorage(); }
@@ -253,8 +258,8 @@
         function updateLoginList() { document.getElementById('personSelect').innerHTML = '<option value="">İsim Seçin</option><option value="all">--- YÖNETİCİ ---</option>' + categories.map(c => `<option value="${c.id}">${c.title}</option>`).join(''); }
         function saveToStorage() { localStorage.setItem('yonetimData', JSON.stringify(categories)); }
         function clearStorage() { if(confirm("Hafıza temizlenecek!")) { localStorage.clear(); location.reload(); } }
-        async function syncData() { try { await fetch(FIREBASE_URL, { method: 'PUT', body: JSON.stringify(categories) }); alert("Bulut başarıyla güncellendi!"); } catch (err) { alert("Hata!"); } }
-        function logout() { if(confirm("Değişiklikleri kaydettiğinizden emin misiniz?")) location.reload(); }
+        async function syncData() { try { await fetch(FIREBASE_URL, { method: 'PUT', body: JSON.stringify(categories) }); alert("Bulut senkronize edildi!"); } catch (err) { alert("Hata!"); } }
+        function logout() { location.reload(); }
         function openModal(id) { currentUserId = id; document.getElementById('modalTitle').innerText = categories.find(c => c.id === id).title; renderTasks(id); document.getElementById('taskModal').classList.replace('hidden', 'flex'); }
         function closeModal() { document.getElementById('taskModal').classList.replace('flex', 'hidden'); renderCards(); }
         
@@ -270,7 +275,7 @@
 
         function generateReport(uId = null) {
             const data = uId ? categories.filter(c => c.id === uId) : categories;
-            let html = `<html><body style="font-family:sans-serif; padding:40px;"><h2>TASK REPORT - ${new Date().toLocaleDateString()}</h2>`;
+            let html = `<html><body style="font-family:sans-serif; padding:40px;"><h2>Task Report</h2>`;
             data.forEach(cat => {
                 html += `<h3>${cat.title}</h3><table border="1" width="100%" cellpadding="10" style="border-collapse:collapse; margin-bottom:20px;"><tr><th>Önem</th><th>Görev</th><th>Not</th></tr>`;
                 cat.tasks.forEach(t => { html += `<tr><td>${t.priority}</td><td>${t.text}</td><td>${t.note || '-'}</td></tr>`; });
