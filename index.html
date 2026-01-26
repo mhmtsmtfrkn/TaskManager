@@ -3,34 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TaskManager - Hızlı Senkronizasyon</title>
+    <title>TaskManager Pro - Tam Sürüm</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700&display=swap" rel="stylesheet">
 
     <style>
-        body { font-family: 'Outfit', sans-serif; background: #0f172a; min-height: 100vh; color: #f8fafc; overflow-x: hidden; }
+        body { font-family: 'Outfit', sans-serif; background: #0f172a; min-height: 100vh; color: #f8fafc; padding-bottom: 120px; }
         #loginOverlay { background: rgba(15, 23, 42, 0.98); backdrop-filter: blur(25px); z-index: 1000; }
         
-        /* GİRİŞ PANELİ OKUNABİLİRLİK DÜZENLEMESİ */
-        #personSelect { 
-            background: #ffffff !important; 
-            color: #0f172a !important; 
-            border: 2px solid #6366f1; 
-            font-weight: 700;
-            border-radius: 16px;
-        }
+        #personSelect { background: #ffffff !important; color: #0f172a !important; border: 2px solid #6366f1; font-weight: 700; border-radius: 16px; }
         #personSelect option { color: #0f172a !important; background: #ffffff !important; font-weight: 600; }
 
         .task-card {
             background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 28px; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            height: 180px; display: flex; cursor: pointer; position: relative; z-index: 10;
+            border-radius: 28px; transition: all 0.4s; height: 180px; display: flex; cursor: pointer; position: relative; overflow: hidden;
         }
-        .task-card:hover { transform: translateY(-10px); background: rgba(30, 41, 59, 0.9); border-color: #6366f1; }
+        .task-card:hover { transform: translateY(-8px); border-color: #6366f1; }
         
-        .prio-badge { font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 6px; }
+        .neon-sidebar { width: 45px; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; border-right: 1px solid rgba(255,255,255,0.05); }
+        .neon-tag { font-size: 8px; font-weight: 800; width: 34px; height: 16px; display: flex; align-items: center; justify-content: center; border-radius: 4px; }
+        .neon-R { color: #22d3ee; border: 1px solid #22d3ee; }
+        .neon-RG { color: #f43f5e; border: 1px solid #f43f5e; }
+        .neon-A { color: #fbbf24; border: 1px solid #fbbf24; }
+
+        .prio-badge { font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 6px; cursor: pointer; }
+        .prio-R { background: #22d3ee; color: #000; } .prio-RG { background: #f43f5e; color: #fff; } .prio-A { background: #fbbf24; color: #000; }
+
+        .date-input { font-size: 10px; border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; padding: 2px; background: rgba(15,23,42,0.5); color: #fff; width: 100%; }
         .custom-scroll::-webkit-scrollbar { width: 5px; }
         .custom-scroll::-webkit-scrollbar-thumb { background: #475569; border-radius: 10px; }
     </style>
@@ -39,27 +40,14 @@
 
     <div id="loginOverlay" class="fixed inset-0 flex items-center justify-center">
         <div class="bg-slate-900/50 p-10 rounded-[45px] border border-white/10 shadow-2xl w-[420px] text-center backdrop-blur-xl">
-            <div class="mb-8">
-                <div class="w-20 h-20 bg-indigo-600 rounded-3xl mx-auto flex items-center justify-center text-white text-4xl mb-4 shadow-2xl shadow-indigo-500/20"><i class="fa-solid fa-bolt"></i></div>
-                <h2 class="text-white text-3xl font-extrabold tracking-tight">Hızlı Giriş</h2>
-                <div class="flex items-center justify-center gap-2 mt-2">
-                    <div id="statusDot" class="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse"></div>
-                    <p id="cloudStatus" class="text-amber-400 text-xs font-bold uppercase tracking-widest">Sistem Hazırlanıyor...</p>
-                </div>
+            <h2 class="text-white text-3xl font-extrabold mb-6">Sistem Girişi</h2>
+            <div id="cloudStatus" class="text-amber-400 text-xs font-bold mb-4 uppercase animate-pulse">Bulut Senkronize Ediliyor...</div>
+            <select id="personSelect" class="w-full p-4 outline-none mb-6"></select>
+            <div class="grid grid-cols-2 gap-3 mb-6">
+                <button onclick="document.getElementById('restoreInput').click()" class="bg-slate-800 text-white text-[11px] py-3 rounded-xl"><i class="fa-solid fa-file-import mr-1"></i> JSON Yükle</button>
+                <button onclick="clearStorage()" class="bg-slate-800 text-rose-400 text-[11px] py-3 rounded-xl"><i class="fa-solid fa-sync mr-1"></i> Sıfırla</button>
             </div>
-            
-            <div class="space-y-5 mb-8 text-left">
-                <select id="personSelect" class="w-full p-4 outline-none cursor-pointer transition-all">
-                    <option value="">Lütfen Bekleyin...</option>
-                </select>
-                
-                <div class="grid grid-cols-2 gap-3 pt-2">
-                    <button onclick="document.getElementById('restoreInput').click()" class="bg-slate-800 hover:bg-emerald-600 text-white text-[11px] font-bold py-3 rounded-xl transition-all"><i class="fa-solid fa-file-import mr-1"></i> JSON Yükle</button>
-                    <button onclick="clearStorage()" class="bg-slate-800 hover:bg-rose-600 text-white text-[11px] font-bold py-3 rounded-xl transition-all"><i class="fa-solid fa-sync mr-1"></i> Sıfırla</button>
-                </div>
-            </div>
-            
-            <button onclick="loginUser()" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-black py-5 rounded-2xl transition-all shadow-xl active:scale-95 text-lg">GİRİŞ YAP</button>
+            <button onclick="loginUser()" class="w-full bg-indigo-600 text-white font-black py-5 rounded-2xl shadow-xl hover:bg-indigo-500 transition">GİRİŞ YAP</button>
             <input type="file" id="restoreInput" accept=".json" class="hidden">
         </div>
     </div>
@@ -67,93 +55,72 @@
     <header class="w-full max-w-6xl flex flex-col md:flex-row justify-between items-center mb-10 z-10 gap-6 hidden" id="mainHeader">
         <div>
             <h1 class="text-4xl font-black text-white tracking-tighter">TASK MANAGER</h1>
-            <p class="text-indigo-400 font-bold" id="activeUserNameDisplay"></p>
+            <p id="activeUserNameDisplay" class="text-indigo-400 font-bold uppercase"></p>
         </div>
         <div class="flex gap-3 bg-slate-800/40 p-2 rounded-2xl border border-white/5 backdrop-blur-md">
-            <button onclick="syncData()" class="bg-indigo-600 text-white px-5 py-2.5 rounded-xl font-bold text-sm transition"><i class="fa-solid fa-cloud-arrow-up"></i> Kaydet</button>
-            <button onclick="logout()" class="bg-rose-500/20 text-rose-400 px-5 py-2.5 rounded-xl font-bold text-sm border border-rose-500/30 transition">Çıkış</button>
+            <button onclick="generateReport(null)" class="bg-emerald-600 text-white px-4 py-2 rounded-xl font-bold text-sm"><i class="fa-solid fa-file-pdf mr-1"></i> Şirket Raporu</button>
+            <button onclick="syncData()" class="bg-indigo-600 text-white px-4 py-2 rounded-xl font-bold text-sm"><i class="fa-solid fa-cloud-arrow-up"></i> Kaydet</button>
+            <button onclick="logout()" class="bg-rose-500 text-white px-4 py-2 rounded-xl font-bold text-sm">Çıkış</button>
         </div>
     </header>
 
     <div id="cardContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 w-full max-w-6xl z-10 pb-12 hidden"></div>
 
     <div id="taskModal" class="fixed inset-0 bg-slate-950/80 hidden items-center justify-center z-[150] backdrop-blur-md p-4">
-        <div class="bg-slate-900 w-full max-w-5xl rounded-[40px] shadow-2xl border border-white/10 overflow-hidden flex flex-col max-h-[90vh]">
-            <div class="p-8 bg-slate-800/50 border-b border-white/5 flex justify-between items-center">
-                <h2 id="modalTitle" class="text-2xl font-black text-white capitalize">Görevler</h2>
-                <div class="flex items-center gap-4">
-                    <select id="modalPrioFilter" onchange="renderTasks(currentUserId)" class="bg-slate-800 text-white border border-white/10 rounded-xl px-4 py-2 text-xs font-bold">
+        <div class="bg-slate-900 w-full max-w-5xl rounded-[40px] shadow-2xl border border-white/10 flex flex-col max-h-[90vh]">
+            <div class="p-6 bg-slate-800/50 border-b border-white/5 flex justify-between items-center">
+                <h2 id="modalTitle" class="text-2xl font-black text-white">Görevler</h2>
+                <div class="flex items-center gap-3">
+                    <select id="modalPrioFilter" onchange="renderTasks(currentUserId)" class="bg-slate-800 text-white border border-white/10 rounded-xl px-3 py-1.5 text-xs font-bold">
                         <option value="all">Tüm Önem Dereceleri</option>
-                        <option value="R">R</option><option value="A">A</option><option value="1">1</option>
+                        <option value="R">R</option><option value="RG">RG</option><option value="A">A</option><option value="1">1</option>
                     </select>
-                    <button onclick="closeModal()" class="text-slate-400 text-3xl hover:text-rose-500">&times;</button>
+                    <button onclick="generateReport(currentUserId)" class="px-4 py-1.5 bg-indigo-600 text-white rounded-xl text-xs font-bold">PDF Rapor</button>
+                    <button onclick="closeModal()" class="text-slate-400 text-3xl">&times;</button>
                 </div>
             </div>
-            <div class="flex-1 overflow-y-auto p-8 custom-scroll" id="taskList"></div>
+            <div id="taskList" class="flex-1 overflow-y-auto p-6 custom-scroll"></div>
+            <div class="p-6 bg-slate-800/30 border-t border-white/5 flex gap-2">
+                <select id="newPriorityInput" class="bg-slate-800 text-white border border-white/10 rounded-xl px-2 font-bold"><option value="R">R</option><option value="A">A</option><option value="1">1</option></select>
+                <input type="text" id="newTaskInput" placeholder="Yeni görev..." class="flex-1 p-3 bg-slate-800 text-white border border-white/10 rounded-xl outline-none">
+                <button onclick="addTask()" class="bg-indigo-600 text-white px-6 py-3 rounded-xl font-bold">EKLE</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="moveModal" class="fixed inset-0 bg-slate-900/60 hidden items-center justify-center z-[300] backdrop-blur-sm">
+        <div class="bg-slate-800 p-8 rounded-3xl w-80 text-center border border-white/10">
+            <h3 class="text-lg font-bold text-white mb-4">Görevi Transfer Et</h3>
+            <select id="moveTargetSelect" class="w-full p-3 bg-slate-700 text-white border border-white/10 rounded-xl mb-6"></select>
+            <div class="flex justify-center gap-2">
+                <button onclick="closeMoveModal()" class="px-4 py-2 text-slate-400 font-bold">İptal</button>
+                <button onclick="confirmMove()" class="px-6 py-2 bg-indigo-600 text-white rounded-xl font-bold">Onayla</button>
+            </div>
         </div>
     </div>
 
     <script>
-        // FIREBASE LİNKİNİZ
         const FIREBASE_URL = "https://proje-id-varsayilan.firebaseio.com/veriler.json"; 
-        const passList = { "SERHAT": "1111", "ALI": "2222", "ALİ": "2222", "MUHAMMED": "3333", "ABDULLAH": "4444", "BAHA": "5555", "MEHMET": "6666", "FATIH": "7777" };
+        const passList = { "SERHAT": "1111", "ALI": "2222", "MUHAMMED": "3333", "ABDULLAH": "4444", "BAHA": "5555", "MEHMET": "6666", "FATIH": "7777" };
 
         let categories = [];
         let currentUserId = null; 
         let isManagerMode = false;
+        let taskToMoveIdx = null;
 
-        // --- HIZLANDIRILMIŞ VERİ YÜKLEME ---
         async function loadData() {
             const statusText = document.getElementById('cloudStatus');
-            const statusDot = document.getElementById('statusDot');
-            
-            // Önce yerel hafızayı göster ki kullanıcı beklemesin
-            const local = localStorage.getItem('yonetimData');
-            if(local) {
-                categories = JSON.parse(local);
-                updateLoginList();
-                statusText.innerText = "Yerel Veri Hazır";
-            }
-
             try {
-                // Arka planda bulutu kontrol et
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 saniye sınırı
-
-                const response = await fetch(FIREBASE_URL, { signal: controller.signal });
+                const response = await fetch(FIREBASE_URL);
                 const data = await response.json();
-                
                 if (data && Array.isArray(data)) {
                     categories = data;
-                    saveToStorage();
-                    statusText.innerText = "Bulut Senkronize Edildi";
-                    statusDot.className = "w-2.5 h-2.5 rounded-full bg-emerald-500";
-                    updateLoginList();
+                    statusText.innerText = "Senkronizasyon Tamamlandı";
+                    statusText.className = "text-emerald-400 text-xs font-bold mb-4";
                 }
-            } catch (err) {
-                statusText.innerText = "Yerel Mod Aktif";
-                statusDot.className = "w-2.5 h-2.5 rounded-full bg-indigo-500 animate-none";
-            }
+            } catch (err) { statusText.innerText = "Yerel Mod Aktif"; }
+            updateLoginList();
         }
-
-        // --- JSON YÜKLEME (BEKLEME YAPMAZ) ---
-        document.getElementById('restoreInput').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = (ev) => {
-                try {
-                    const data = JSON.parse(ev.target.result);
-                    if (Array.isArray(data)) {
-                        categories = JSON.parse(JSON.stringify(data));
-                        saveToStorage();
-                        updateLoginList();
-                        alert("Veriler yüklendi! Giriş yapabilirsiniz.");
-                    }
-                } catch (err) { alert("JSON Hatası!"); }
-            };
-            reader.readAsText(file);
-        });
 
         function loginUser() {
             const select = document.getElementById('personSelect');
@@ -167,11 +134,9 @@
                 currentUserId = parseFloat(select.value);
                 const user = categories.find(c => c.id === currentUserId);
                 const pass = prompt(`${user.title} şifresi:`);
-                const expected = (user.password || passList[user.title.trim().toUpperCase()] || "1234").toString().trim();
-                if (!pass || pass.trim() !== expected) return alert("Hatalı Şifre!");
+                if (!pass || pass.trim() !== (user.password || passList[user.title.toUpperCase()] || "1234").toString().trim()) return alert("Hatalı Şifre!");
                 document.getElementById('activeUserNameDisplay').innerText = user.title;
             }
-            
             document.getElementById('loginOverlay').classList.add('hidden');
             document.getElementById('mainHeader').classList.remove('hidden');
             document.getElementById('cardContainer').classList.remove('hidden');
@@ -181,38 +146,80 @@
         function renderCards() {
             const container = document.getElementById('cardContainer');
             const usersToShow = isManagerMode ? categories : categories.filter(c => c.id === currentUserId);
-            container.innerHTML = usersToShow.map(cat => `
-                <div class="task-card" onclick="openModal(${cat.id})">
-                    <div class="flex-1 p-6 flex flex-col justify-between">
-                        <h3 class="text-xl font-bold text-white">${cat.title}</h3>
-                        <p class="text-slate-400 text-xs">${cat.tasks.length} Görev Kayıtlı</p>
-                    </div>
-                </div>
-            `).join('');
+            container.innerHTML = usersToShow.map(cat => {
+                const counts = {}; cat.tasks.forEach(t => counts[t.priority] = (counts[t.priority] || 0) + 1);
+                const sidebar = `<div class="neon-sidebar">${["R","RG","A","1"].map(p => counts[p] ? `<div class="neon-tag neon-${p}">${p}:${counts[p]}</div>` : "").join('')}</div>`;
+                return `<div class="task-card" onclick="openModal(${cat.id})">${sidebar}<div class="p-6 flex flex-col justify-between flex-1"><h3 class="text-xl font-bold text-white">${cat.title}</h3><p class="text-slate-400 text-xs">${cat.tasks.length} Görev Kayıtlı</p></div></div>`;
+            }).join('');
         }
 
         function renderTasks(uId) {
+            currentUserId = uId;
             const filter = document.getElementById('modalPrioFilter').value;
             const cat = categories.find(c => c.id === uId);
-            document.getElementById('taskList').innerHTML = cat.tasks.filter(t => filter === 'all' || t.priority === filter).map(t => `
-                <div class="p-5 bg-slate-800/50 border border-white/5 rounded-2xl mb-4">
-                    <span class="font-bold text-indigo-400">[${t.priority}]</span>
-                    <span class="ml-3 text-white">${t.text}</span>
-                </div>
-            `).join('');
+            document.getElementById('taskList').innerHTML = cat.tasks.filter(t => filter === 'all' || t.priority === filter).map((t, i) => {
+                const realIdx = cat.tasks.indexOf(t);
+                return `
+                    <div class="p-5 bg-slate-800/50 border border-white/5 rounded-2xl mb-4">
+                        <div class="flex justify-between items-center mb-3">
+                            <div class="flex items-center gap-3">
+                                <select onchange="updateTask(${uId}, ${realIdx}, 'priority', this.value)" class="prio-badge prio-${t.priority} border-none outline-none">
+                                    <option value="R" ${t.priority=='R'?'selected':''}>R</option><option value="RG" ${t.priority=='RG'?'selected':''}>RG</option><option value="A" ${t.priority=='A'?'selected':''}>A</option><option value="1" ${t.priority=='1'?'selected':''}>1</option>
+                                </select>
+                                <span class="text-white font-bold">${t.text}</span>
+                            </div>
+                            <div class="flex gap-3 text-slate-400">
+                                <button onclick="editTask(${uId}, ${realIdx})"><i class="fa-solid fa-pen"></i></button>
+                                <button onclick="openMoveModal(${realIdx})"><i class="fa-solid fa-share-nodes"></i></button>
+                                <button onclick="deleteTask(${uId}, ${realIdx})" class="text-rose-500"><i class="fa-solid fa-trash-can"></i></button>
+                            </div>
+                        </div>
+                        <textarea onchange="updateTask(${uId}, ${realIdx}, 'note', this.value)" class="w-full bg-slate-900 text-slate-300 text-xs p-3 rounded-xl border-none h-16 outline-none" placeholder="Notlar...">${t.note || ""}</textarea>
+                    </div>`;
+            }).join('');
         }
 
-        function updateLoginList() { 
-            const select = document.getElementById('personSelect');
-            if(!categories.length) { select.innerHTML = '<option value="">Veri Yok, JSON Yükleyin</option>'; return; }
-            select.innerHTML = '<option value="">İsim Seçin</option><option value="all">--- YÖNETİCİ ---</option>' + categories.map(c => `<option value="${c.id}">${c.title}</option>`).join(''); 
+        function generateReport(uId = null) {
+            const data = uId ? categories.filter(c => c.id === uId) : categories;
+            let html = `<html><body style="font-family:sans-serif; padding:40px;"><h2>Task Report - ${new Date().toLocaleDateString()}</h2>`;
+            data.forEach(cat => {
+                html += `<h3>${cat.title}</h3><table border="1" width="100%" cellpadding="10" style="border-collapse:collapse; margin-bottom:20px;"><tr><th>Önem</th><th>Görev</th><th>Not</th></tr>`;
+                cat.tasks.forEach(t => { html += `<tr><td>${t.priority}</td><td>${t.text}</td><td>${t.note || '-'}</td></tr>`; });
+                html += `</table>`;
+            });
+            html += `<script>window.onload=function(){window.print(); window.close();}<\/script></body></html>`;
+            const win = window.open('', '_blank'); win.document.write(html); win.document.close();
         }
+
+        function updateTask(uId, i, f, v) { categories.find(c => c.id === uId).tasks[i][f] = v; saveToStorage(); }
+        function editTask(uId, i) { const cat = categories.find(c => c.id === uId); const val = prompt("Düzenle:", cat.tasks[i].text); if(val) { cat.tasks[i].text = val.toUpperCase(); renderTasks(uId); saveToStorage(); } }
+        function deleteTask(uId, i) { if(confirm("Silinsin mi?")) { categories.find(c => c.id === uId).tasks.splice(i, 1); renderTasks(uId); renderCards(); saveToStorage(); } }
+        function addTask() {
+            const inp = document.getElementById('newTaskInput'); if (!inp.value) return;
+            categories.find(c => c.id === currentUserId).tasks.push({ text: inp.value.toUpperCase(), priority: document.getElementById('newPriorityInput').value, note: "", status: "Yapılıyor" });
+            inp.value = ''; renderTasks(currentUserId); renderCards(); saveToStorage();
+        }
+        function openMoveModal(idx) { taskToMoveIdx = idx; document.getElementById('moveTargetSelect').innerHTML = categories.filter(c => c.id !== currentUserId).map(c => `<option value="${c.id}">${c.title}</option>`).join(''); document.getElementById('moveModal').classList.remove('hidden'); }
+        function closeMoveModal() { document.getElementById('moveModal').classList.add('hidden'); }
+        function confirmMove() { const targetId = parseFloat(document.getElementById('moveTargetSelect').value); const task = categories.find(c => c.id === currentUserId).tasks.splice(taskToMoveIdx, 1)[0]; categories.find(c => c.id === targetId).tasks.push(task); closeMoveModal(); renderTasks(currentUserId); renderCards(); saveToStorage(); }
+        function updateLoginList() { document.getElementById('personSelect').innerHTML = '<option value="">İsim Seçin</option><option value="all">--- TÜMÜNÜ GÖR (YÖNETİCİ) ---</option>' + categories.map(c => `<option value="${c.id}">${c.title}</option>`).join(''); }
         function saveToStorage() { localStorage.setItem('yonetimData', JSON.stringify(categories)); }
-        function clearStorage() { if(confirm("Tüm hafıza silinsin mi?")) { localStorage.clear(); location.reload(); } }
-        async function syncData() { try { await fetch(FIREBASE_URL, { method: 'PUT', body: JSON.stringify(categories) }); alert("Kaydedildi!"); } catch (err) { alert("Hata!"); } }
-        function openModal(id) { currentUserId = id; renderTasks(id); document.getElementById('taskModal').classList.replace('hidden', 'flex'); }
-        function closeModal() { document.getElementById('taskModal').classList.replace('flex', 'hidden'); }
+        function clearStorage() { if(confirm("Sıfırlansın mı?")) { localStorage.clear(); location.reload(); } }
+        async function syncData() { try { await fetch(FIREBASE_URL, { method: 'PUT', body: JSON.stringify(categories) }); alert("Bulut senkronize edildi!"); } catch (err) { alert("Hata!"); } }
         function logout() { location.reload(); }
+        function openModal(id) { currentUserId = id; renderTasks(id); document.getElementById('taskModal').classList.replace('hidden', 'flex'); }
+        function closeModal() { document.getElementById('taskModal').classList.replace('flex', 'hidden'); renderCards(); }
+        
+        // JSON Geri Yükleme Onarıldı
+        document.getElementById('restoreInput').addEventListener('change', function(e) {
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                categories = JSON.parse(ev.target.result);
+                saveToStorage(); updateLoginList();
+                alert("Yedek Yüklendi! Giriş yapabilirsiniz.");
+            };
+            reader.readAsText(e.target.files[0]);
+        });
 
         window.onload = loadData;
     </script>
