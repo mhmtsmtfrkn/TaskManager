@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TaskManager Pro - Tam Senkronizasyon</title>
+    <title>TaskManager Pro - Tam Senkronizasyon Çözümü</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -19,6 +19,7 @@
         #loginOverlay { background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(20px); z-index: 1000; }
         #personSelect { background: #ffffff !important; color: #1e293b !important; border: 2px solid #6366f1; font-weight: 700; border-radius: 16px; }
 
+        /* YEŞİL NEON GÖREV KARTLARI */
         .task-card {
             background: rgba(255, 255, 255, 0.75); backdrop-filter: blur(15px); border: 1px solid rgba(16, 185, 129, 0.3);
             border-radius: 28px; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
@@ -28,7 +29,7 @@
         .task-card:hover { transform: translateY(-12px); box-shadow: 0 0 35px rgba(16, 185, 129, 0.6); border-color: #10b981; }
 
         .task-item-row { background: #fff; border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 24px; margin-bottom: 16px; padding: 20px; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.15); transition: 0.3s; }
-        .task-item-row:hover { border-color: #10b981; box-shadow: 0 0 20px rgba(16, 185, 129, 0.4); }
+        .task-item-row:hover { border-color: #10b981; box-shadow: 0 0 25px rgba(16, 185, 129, 0.45); }
         
         /* ÖNEM DERECELERİ */
         .prio-R  { background: #00f2fe; color: #000; } .neon-R  { color: #00f2fe; border: 1px solid #00f2fe; }
@@ -40,7 +41,6 @@
         .prio-2  { background: #10b981; color: #fff; } .neon-2  { color: #10b981; border: 1px solid #10b981; }
         .prio-3  { background: #64748b; color: #fff; } .neon-3  { color: #64748b; border: 1px solid #64748b; }
 
-        .custom-scroll::-webkit-scrollbar { width: 5px; }
         .neon-sidebar { width: 50px; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; border-right: 1px solid rgba(0,0,0,0.05); }
         .neon-tag { font-size: 9px; font-weight: 800; width: 36px; height: 18px; display: flex; align-items: center; justify-content: center; border-radius: 6px; }
     </style>
@@ -55,14 +55,14 @@
             <h2 class="text-white text-3xl font-extrabold mb-6 italic">TASK HUB PRO</h2>
             <div class="flex items-center justify-center gap-2 mb-4">
                 <div id="statusDot" class="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse"></div>
-                <p id="cloudStatus" class="text-amber-400 text-xs font-bold uppercase">Bulut Verileri Alınıyor...</p>
+                <p id="cloudStatus" class="text-amber-400 text-xs font-bold uppercase">Sistem Hazırlanıyor...</p>
             </div>
             <select id="personSelect" class="w-full p-4 outline-none mb-6">
-                <option value="">Lütfen Bekleyin...</option>
+                <option value="">İsimler Bekleniyor...</option>
             </select>
             <div class="grid grid-cols-2 gap-3 mb-6">
-                <button onclick="document.getElementById('restoreInput').click()" class="bg-slate-800 text-white text-[11px] py-3 rounded-xl hover:bg-slate-700 transition">Yedek Yükle</button>
-                <button onclick="clearStorage()" class="bg-slate-800 text-rose-400 text-[11px] py-3 rounded-xl hover:bg-slate-700 transition">Sıfırla</button>
+                <button onclick="document.getElementById('restoreInput').click()" class="bg-slate-800 text-white text-[11px] py-3 rounded-xl hover:bg-slate-700">Yedek Yükle</button>
+                <button onclick="clearStorage()" class="bg-slate-800 text-rose-400 text-[11px] py-3 rounded-xl hover:bg-slate-700">Sıfırla</button>
             </div>
             <button onclick="loginUser()" class="w-full bg-indigo-600 text-white font-black py-5 rounded-2xl shadow-xl hover:bg-indigo-500 transition active:scale-95">SİSTEME GİRİŞ YAP</button>
             <input type="file" id="restoreInput" accept=".json" class="hidden">
@@ -90,9 +90,9 @@
                 <div class="flex items-center gap-4">
                     <select id="modalPrioFilter" onchange="renderTasks(currentUserId)" class="bg-white border rounded-xl px-4 py-2 text-xs font-bold shadow-sm outline-none">
                         <option value="all">Filtrele</option>
-                        <option value="R">R</option><option value="RG">RG</option><option value="A">A</option><option value="1">1</option>
+                        <option value="R">R</option><option value="RG">RG</option><option value="RH">RH</option><option value="RA">RA</option><option value="A">A</option><option value="1">1</option><option value="2">2</option><option value="3">3</option>
                     </select>
-                    <button onclick="generateReport(currentUserId)" class="px-5 py-2 bg-indigo-600 text-white rounded-xl text-xs font-bold hover:bg-indigo-700 shadow-md transition">PDF</button>
+                    <button onclick="generateReport(currentUserId)" class="px-5 py-2 bg-indigo-600 text-white rounded-xl text-xs font-bold">PDF</button>
                     <button onclick="closeModal()" class="text-slate-400 text-3xl hover:text-rose-500 transition-colors">&times;</button>
                 </div>
             </div>
@@ -117,16 +117,17 @@
     </div>
 
     <script>
+        // FIREBASE LİNKİNİZ
         const FIREBASE_URL = "https://proje-id-varsayilan.firebaseio.com/veriler.json"; 
         const ADMIN_PASS = "0571";
-        const passList = { "SERHAT": "1111", "ALI": "2222", "MUHAMMED": "3333", "ABDULLAH": "4444", "BAHA": "5555", "MEHMET": "6666", "FATIH": "7777" };
+        const passList = { "SERHAT": "1111", "ALI": "2222", "ALİ": "2222", "MUHAMMED": "3333", "ABDULLAH": "4444", "BAHA": "5555", "MEHMET": "6666", "FATIH": "7777" };
 
         let categories = [];
         let currentUserId = null; 
         let isManagerMode = false;
         let taskToMoveIdx = null;
 
-        // --- BULUT VERİSİNE ÖNCELİK VEREN SİSTEM ---
+        // --- BULUT VERİSİNİ ZORUNLU KILAN YÜKLEME ---
         async function loadData() {
             const statusText = document.getElementById('cloudStatus');
             const statusDot = document.getElementById('statusDot');
@@ -139,14 +140,11 @@
                 
                 if (data && Array.isArray(data)) {
                     categories = data;
-                    saveToStorage(); // Buluttan geleni yerel hafızaya da yaz
-                    statusText.innerText = "Bulut Senkronizasyonu Aktif";
+                    saveToStorage(); // Bulut verisini hafızaya kilitle
+                    statusText.innerText = "Bulut Senkronizasyonu Başarılı";
                     statusDot.className = "w-2.5 h-2.5 rounded-full bg-emerald-500";
-                } else {
-                    throw new Error("Veri hatası");
                 }
             } catch (err) {
-                // Bulut başarısızsa yereli kullan
                 const local = localStorage.getItem('yonetimData');
                 if(local) categories = JSON.parse(local);
                 statusText.innerText = "Yerel Mod Aktif";
@@ -155,11 +153,14 @@
             updateLoginList();
         }
 
-        function loginUser() {
+        // --- GİRİŞ ANINDA VERİYİ TEKRAR DOĞRULA ---
+        async function loginUser() {
             const select = document.getElementById('personSelect');
             if (!select.value) return alert("Lütfen bir isim seçin!");
             
-            // Giriş anında en son veriyi doğrula
+            // Girişten hemen önce son bir bulut kontrolü yap
+            await loadData();
+
             if (select.value === "all") {
                 if (prompt("Yönetici Şifresi:") !== ADMIN_PASS) return alert("Hatalı!");
                 isManagerMode = true;
@@ -178,13 +179,14 @@
             renderCards();
         }
 
+        // --- DİĞER FONKSİYONLAR ---
         function renderCards() {
             const container = document.getElementById('cardContainer');
             const usersToShow = isManagerMode ? categories : categories.filter(c => c.id === currentUserId);
             container.innerHTML = usersToShow.map(cat => {
                 const counts = {}; cat.tasks.forEach(t => counts[t.priority] = (counts[t.priority] || 0) + 1);
                 const sidebar = `<div class="neon-sidebar">${["R","RG","RH","RA","A","1","2","3"].map(p => counts[p] ? `<div class="neon-tag neon-${p}">${p}:${counts[p]}</div>` : "").join('')}</div>`;
-                return `<div class="task-card" onclick="openModal(${cat.id})">${sidebar}<div class="p-6 flex flex-col justify-between flex-1"><h3 class="text-xl font-bold text-slate-800">${cat.title}</h3><p class="text-indigo-400 text-xs font-black uppercase tracking-widest">${cat.tasks.length} Görev Kaydı</p></div></div>`;
+                return `<div class="task-card" onclick="openModal(${cat.id})">${sidebar}<div class="p-6 flex flex-col justify-between flex-1"><h3 class="text-xl font-bold text-slate-800">${cat.title}</h3><p class="text-indigo-400 text-xs font-black uppercase tracking-widest">${cat.tasks.length} AKTİF GÖREV</p></div></div>`;
             }).join('');
         }
 
@@ -212,7 +214,7 @@
         function updateLoginList() { document.getElementById('personSelect').innerHTML = '<option value="">İsim Seçin</option><option value="all">--- YÖNETİCİ ---</option>' + categories.map(c => `<option value="${c.id}">${c.title}</option>`).join(''); }
         function saveToStorage() { localStorage.setItem('yonetimData', JSON.stringify(categories)); }
         function clearStorage() { if(confirm("Hafıza temizlenecek!")) { localStorage.clear(); location.reload(); } }
-        async function syncData() { try { await fetch(FIREBASE_URL, { method: 'PUT', body: JSON.stringify(categories) }); alert("Bulut senkronize edildi!"); } catch (err) { alert("Hata!"); } }
+        async function syncData() { try { await fetch(FIREBASE_URL, { method: 'PUT', body: JSON.stringify(categories) }); alert("Bulut başarıyla güncellendi!"); } catch (err) { alert("Bağlantı hatası!"); } }
         function logout() { location.reload(); }
         function openModal(id) { currentUserId = id; document.getElementById('modalTitle').innerText = categories.find(c => c.id === id).title; renderTasks(id); document.getElementById('taskModal').classList.replace('hidden', 'flex'); }
         function closeModal() { document.getElementById('taskModal').classList.replace('flex', 'hidden'); renderCards(); }
