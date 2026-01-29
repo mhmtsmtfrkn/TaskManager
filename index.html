@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Task Hub Pro - Kesin Bağlantı Çözümü</title>
+    <title>Task Hub Pro - Kesin Bulut Çözümü</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -59,20 +59,20 @@
 
     <div id="loginOverlay" class="fixed inset-0 flex items-center justify-center">
         <div class="bg-slate-900/50 p-10 rounded-[45px] border border-white/10 shadow-2xl w-[420px] text-center backdrop-blur-xl">
-            <h2 class="text-white text-3xl font-extrabold mb-6 italic uppercase tracking-widest">TASK HUB PRO</h2>
+            <h2 class="text-white text-3xl font-extrabold mb-6 italic uppercase tracking-tighter">TASK HUB PRO</h2>
             <div class="flex items-center justify-center gap-2 mb-4">
                 <div id="statusDot" class="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse"></div>
-                <p id="cloudStatus" class="text-amber-400 text-xs font-bold uppercase tracking-widest">Bağlantı Kuruluyor...</p>
+                <p id="cloudStatus" class="text-amber-400 text-xs font-bold uppercase tracking-widest">SİSTEM KONTROLÜ...</p>
             </div>
             <select id="personSelect" class="w-full p-4 outline-none mb-6">
                 <option value="">Lütfen Bekleyin...</option>
             </select>
             <div class="grid grid-cols-2 gap-3 mb-3">
                 <button onclick="document.getElementById('restoreInput').click()" class="bg-slate-800 text-white text-[11px] py-3 rounded-xl hover:bg-slate-700 transition font-bold uppercase">JSON YÜKLE</button>
-                <button onclick="loadDataForce()" class="bg-indigo-600 text-white text-[11px] py-3 rounded-xl hover:bg-indigo-500 transition font-bold uppercase border border-white/20 shadow-lg shadow-indigo-500/20">Buluttan Yükle</button>
+                <button onclick="loadDataForce()" class="bg-indigo-600 text-white text-[11px] py-3 rounded-xl hover:bg-indigo-500 transition font-bold uppercase border border-white/20">Buluttan Yükle</button>
             </div>
             <div class="mb-6">
-                <button onclick="clearStorage()" class="w-full bg-slate-800 text-rose-400 text-[11px] py-3 rounded-xl hover:bg-slate-700 transition font-bold uppercase">SIFIRLA</button>
+                <button onclick="clearStorage()" class="w-full bg-slate-800 text-rose-400 text-[11px] py-3 rounded-xl hover:bg-slate-700 transition font-bold uppercase">SİSTEMİ SIFIRLA</button>
             </div>
             <button onclick="loginUser()" class="w-full bg-indigo-600 text-white font-black py-5 rounded-2xl shadow-xl hover:bg-indigo-500 transition active:scale-95">GİRİŞ YAP</button>
             <input type="file" id="restoreInput" accept=".json" class="hidden">
@@ -158,41 +158,31 @@
             setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 400); }, 3000);
         }
 
-        // --- GÜÇLENDİRİLMİŞ BULUT YÜKLEME (HATALARI ONARIR) ---
+        // --- ZORUNLU BULUT YÜKLEME ---
         async function loadDataForce() {
             const statusText = document.getElementById('cloudStatus');
             const statusDot = document.getElementById('statusDot');
             statusText.innerText = "Bulut Sorgulanıyor...";
-            
             try {
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 Saniye Zaman Aşımı
-                
-                const response = await fetch(FIREBASE_URL, { signal: controller.signal });
-                clearTimeout(timeoutId);
-                
+                const response = await fetch(FIREBASE_URL);
                 let data = await response.json();
                 if (data && !Array.isArray(data)) data = Object.values(data);
-                
                 if (data && data.length > 0 && data[0].title && data[0].title !== "undefined") {
                     data.forEach(c => { if(!c.password) c.password = passList[c.title.toUpperCase()] || "1234"; });
                     categories = data;
                     localStorage.setItem('yonetimData', JSON.stringify(categories));
                     updateLoginList();
-                    statusText.innerText = "Veriler Geri Yüklendi";
+                    statusText.innerText = "Bulut Verisi Yüklendi";
                     statusDot.className = "w-2.5 h-2.5 rounded-full bg-emerald-500";
-                    showToast("Bulut senkronizasyonu tamamlandı!", "success");
-                } else { showToast("Bulutta geçerli veri bulunamadı!", "error"); }
-            } catch (err) { 
-                statusText.innerText = "Bağlantı Hatası!";
-                showToast("Bağlantı başarısız. İnternetinizi kontrol edin.", "error"); 
-            }
+                    showToast("Bulut verisi başarıyla çekildi!", "success");
+                } else { showToast("Bulutta veri bulunamadı!", "error"); }
+            } catch (err) { showToast("Bağlantı Hatası!", "error"); }
         }
 
         async function loadData() {
             const statusText = document.getElementById('cloudStatus');
             const local = localStorage.getItem('yonetimData');
-            if(local && local !== "[]") { categories = JSON.parse(local); updateLoginList(); statusText.innerText = "Hafıza Hazır"; }
+            if(local && local !== "[]") { categories = JSON.parse(local); updateLoginList(); statusText.innerText = "Yerel Hafıza Kilitli"; }
             try {
                 const response = await fetch(FIREBASE_URL);
                 let data = await response.json();
@@ -202,7 +192,7 @@
                     categories = data;
                     localStorage.setItem('yonetimData', JSON.stringify(categories));
                     updateLoginList();
-                    statusText.innerText = "Bağlantı Aktif";
+                    statusText.innerText = "Bulut Senkronize";
                     document.getElementById('statusDot').className = "w-2.5 h-2.5 rounded-full bg-emerald-500";
                 }
             } catch (err) { statusText.innerText = "Çevrimdışı Mod"; }
@@ -222,7 +212,7 @@
                 isManagerMode = false;
                 currentUserId = parseFloat(select.value);
                 const user = categories.find(c => c.id === currentUserId);
-                if(!user) return alert("Veri hatası! Buluttan Geri Yükle deyin.");
+                if(!user) return alert("Hata: Veriler bulunamadı, 'Buluttan Yükle' deneyin.");
                 const pass = prompt(`${user.title} şifresi:`);
                 const cleanInput = pass ? pass.toString().trim() : "";
                 const cloudPass = user.password ? user.password.toString().trim() : "";
@@ -244,8 +234,8 @@
                 const done = critical.filter(t => t.status === 'Tamamlandı').length;
                 const score = critical.length > 0 ? Math.round((done / critical.length) * 100) : 0;
                 return `<div class="bg-indigo-50/50 p-6 rounded-3xl border border-indigo-100">
-                    <div class="flex justify-between items-center mb-4"><span class="font-black text-indigo-900">${cat.title}</span><span class="text-[10px] font-bold bg-white px-2 py-1 rounded-lg text-indigo-600">${cat.tasks.length} İŞ</span></div>
-                    <div class="text-[10px] font-bold text-slate-500 uppercase mb-2">KRİTİK BAŞARI</div>
+                    <div class="flex justify-between items-center mb-4"><span class="font-black text-indigo-900">${cat.title}</span><span class="text-[10px] font-bold bg-white px-2 py-1 rounded-lg text-indigo-600 shadow-sm">${cat.tasks.length} İŞ</span></div>
+                    <div class="text-[10px] font-bold text-slate-500 uppercase mb-2">A & 1 Performansı</div>
                     <div class="flex items-center gap-3"><div class="flex-1 h-2 bg-slate-200 rounded-full overflow-hidden"><div class="h-full bg-emerald-500" style="width: ${score}%"></div></div><span class="text-xs font-black text-emerald-600">%${score}</span></div>
                 </div>`;
             }).join('');
@@ -304,8 +294,8 @@
         function logout() { location.reload(); }
         function openModal(id) { currentUserId = id; document.getElementById('modalTitle').innerText = categories.find(c => c.id === id).title; renderTasks(id); document.getElementById('taskModal').classList.replace('hidden', 'flex'); }
         function closeModal() { document.getElementById('taskModal').classList.replace('flex', 'hidden'); renderCards(); }
-        function clearStorage() { if(confirm("Tüm veriler temizlenecek!")) { localStorage.clear(); location.reload(); } }
-        function exportBackup() { const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(categories)); const downloadAnchorNode = document.createElement('a'); downloadAnchorNode.setAttribute("href", dataStr); downloadAnchorNode.setAttribute("download", "Yonetim_Sistem_Yedek.json"); downloadAnchorNode.click(); downloadAnchorNode.remove(); }
+        function clearStorage() { if(confirm("Tüm hafıza temizlenecek!")) { localStorage.clear(); location.reload(); } }
+        function exportBackup() { const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(categories)); const downloadAnchorNode = document.createElement('a'); downloadAnchorNode.setAttribute("href", dataStr); downloadAnchorNode.setAttribute("download", "Yonetim_Yedek.json"); downloadAnchorNode.click(); downloadAnchorNode.remove(); }
         function changeUserPass(id) { const user = categories.find(c => c.id === id); const newPass = prompt(`${user.title} için yeni şifre:`); if(newPass) { user.password = newPass.toString().trim(); showToast("Şifre Değiştirildi", "success"); renderCards(); } }
 
         document.getElementById('restoreInput').addEventListener('change', function(e) {
@@ -320,7 +310,7 @@
 
         function generateReport(uId = null) {
             const data = uId ? categories.filter(c => c.id === uId) : categories;
-            let html = `<html><body style="font-family:sans-serif; padding:40px;"><h2>Task Report</h2>`;
+            let html = `<html><body style="font-family:sans-serif; padding:40px;"><h2>Task Report - ${new Date().toLocaleDateString()}</h2>`;
             data.forEach(cat => {
                 html += `<h3>${cat.title}</h3><table border="1" width="100%" cellpadding="10" style="border-collapse:collapse; margin-bottom:20px;"><tr><th>Önem</th><th>Görev</th><th>Durum</th><th>Not</th></tr>`;
                 cat.tasks.forEach(t => { html += `<tr><td>${t.priority}</td><td>${t.text}</td><td>${t.status || 'Yapılıyor'}</td><td>${t.note || '-'}</td></tr>`; });
@@ -329,7 +319,6 @@
             html += `<script>window.onload=function(){window.print(); window.close();}<\/script></body></html>`;
             const win = window.open('', '_blank'); win.document.write(html); win.document.close();
         }
-
         window.onload = loadData;
     </script>
 </body>
