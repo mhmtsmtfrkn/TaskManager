@@ -29,6 +29,7 @@
 
         .task-item-row { background: #fff; border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 24px; margin-bottom: 16px; padding: 20px; box-shadow: 0 4px 20px rgba(16, 185, 129, 0.2); transition: 0.3s; }
         
+        /* 8 RENKLİ ÖNEM PALETİ */
         .prio-R  { background: #00f2fe; color: #000; } .neon-R  { color: #00f2fe; border: 1px solid #00f2fe; }
         .prio-RG { background: #667eea; color: #fff; } .neon-RG { color: #667eea; border: 1px solid #667eea; }
         .prio-RH { background: #b721ff; color: #fff; } .neon-RH { color: #b721ff; border: 1px solid #b721ff; }
@@ -59,10 +60,10 @@
 
     <div id="loginOverlay" class="fixed inset-0 flex items-center justify-center">
         <div class="bg-slate-900/50 p-10 rounded-[45px] border border-white/10 shadow-2xl w-[420px] text-center backdrop-blur-xl">
-            <h2 class="text-white text-3xl font-extrabold mb-6 italic uppercase tracking-tighter">TASK HUB PRO</h2>
+            <h2 class="text-white text-3xl font-extrabold mb-6 italic uppercase tracking-widest">TASK HUB PRO</h2>
             <div class="flex items-center justify-center gap-2 mb-4">
                 <div id="statusDot" class="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse"></div>
-                <p id="cloudStatus" class="text-amber-400 text-xs font-bold uppercase tracking-widest">SİSTEM KONTROLÜ...</p>
+                <p id="cloudStatus" class="text-amber-400 text-xs font-bold uppercase tracking-widest">Bağlantı Kuruluyor...</p>
             </div>
             <select id="personSelect" class="w-full p-4 outline-none mb-6">
                 <option value="">Lütfen Bekleyin...</option>
@@ -72,7 +73,7 @@
                 <button onclick="loadDataForce()" class="bg-indigo-600 text-white text-[11px] py-3 rounded-xl hover:bg-indigo-500 transition font-bold uppercase border border-white/20">Buluttan Yükle</button>
             </div>
             <div class="mb-6">
-                <button onclick="clearStorage()" class="w-full bg-slate-800 text-rose-400 text-[11px] py-3 rounded-xl hover:bg-slate-700 transition font-bold uppercase">SİSTEMİ SIFIRLA</button>
+                <button onclick="clearStorage()" class="w-full bg-slate-800 text-rose-400 text-[11px] py-3 rounded-xl hover:bg-slate-700 transition font-bold uppercase">SIFIRLA</button>
             </div>
             <button onclick="loginUser()" class="w-full bg-indigo-600 text-white font-black py-5 rounded-2xl shadow-xl hover:bg-indigo-500 transition active:scale-95">GİRİŞ YAP</button>
             <input type="file" id="restoreInput" accept=".json" class="hidden">
@@ -158,7 +159,6 @@
             setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 400); }, 3000);
         }
 
-        // --- ZORUNLU BULUT YÜKLEME ---
         async function loadDataForce() {
             const statusText = document.getElementById('cloudStatus');
             const statusDot = document.getElementById('statusDot');
@@ -172,17 +172,17 @@
                     categories = data;
                     localStorage.setItem('yonetimData', JSON.stringify(categories));
                     updateLoginList();
-                    statusText.innerText = "Bulut Verisi Yüklendi";
+                    statusText.innerText = "Bulut Senkronizasyonu Başarılı";
                     statusDot.className = "w-2.5 h-2.5 rounded-full bg-emerald-500";
                     showToast("Bulut verisi başarıyla çekildi!", "success");
-                } else { showToast("Bulutta veri bulunamadı!", "error"); }
+                } else { showToast("Bulutta sağlam veri bulunamadı!", "error"); }
             } catch (err) { showToast("Bağlantı Hatası!", "error"); }
         }
 
         async function loadData() {
             const statusText = document.getElementById('cloudStatus');
             const local = localStorage.getItem('yonetimData');
-            if(local && local !== "[]") { categories = JSON.parse(local); updateLoginList(); statusText.innerText = "Yerel Hafıza Kilitli"; }
+            if(local && local !== "[]") { categories = JSON.parse(local); updateLoginList(); statusText.innerText = "Hafıza Hazır"; }
             try {
                 const response = await fetch(FIREBASE_URL);
                 let data = await response.json();
@@ -192,7 +192,7 @@
                     categories = data;
                     localStorage.setItem('yonetimData', JSON.stringify(categories));
                     updateLoginList();
-                    statusText.innerText = "Bulut Senkronize";
+                    statusText.innerText = "Sistem Bağlandı";
                     document.getElementById('statusDot').className = "w-2.5 h-2.5 rounded-full bg-emerald-500";
                 }
             } catch (err) { statusText.innerText = "Çevrimdışı Mod"; }
@@ -212,7 +212,7 @@
                 isManagerMode = false;
                 currentUserId = parseFloat(select.value);
                 const user = categories.find(c => c.id === currentUserId);
-                if(!user) return alert("Hata: Veriler bulunamadı, 'Buluttan Yükle' deneyin.");
+                if(!user) return alert("Hata: Veri bulunamadı. Lütfen Buluttan Yükle deyin.");
                 const pass = prompt(`${user.title} şifresi:`);
                 const cleanInput = pass ? pass.toString().trim() : "";
                 const cloudPass = user.password ? user.password.toString().trim() : "";
@@ -235,7 +235,7 @@
                 const score = critical.length > 0 ? Math.round((done / critical.length) * 100) : 0;
                 return `<div class="bg-indigo-50/50 p-6 rounded-3xl border border-indigo-100">
                     <div class="flex justify-between items-center mb-4"><span class="font-black text-indigo-900">${cat.title}</span><span class="text-[10px] font-bold bg-white px-2 py-1 rounded-lg text-indigo-600 shadow-sm">${cat.tasks.length} İŞ</span></div>
-                    <div class="text-[10px] font-bold text-slate-500 uppercase mb-2">A & 1 Performansı</div>
+                    <div class="text-[10px] font-bold text-slate-500 uppercase mb-2">A & 1 BAŞARISI</div>
                     <div class="flex items-center gap-3"><div class="flex-1 h-2 bg-slate-200 rounded-full overflow-hidden"><div class="h-full bg-emerald-500" style="width: ${score}%"></div></div><span class="text-xs font-black text-emerald-600">%${score}</span></div>
                 </div>`;
             }).join('');
@@ -289,7 +289,14 @@
         function openMoveModal(idx) { taskToMoveIdx = idx; document.getElementById('moveTargetSelect').innerHTML = categories.filter(c => c.id !== currentUserId).map(c => `<option value="${c.id}">${c.title}</option>`).join(''); document.getElementById('moveModal').classList.remove('hidden'); }
         function closeMoveModal() { document.getElementById('moveModal').classList.add('hidden'); }
         function confirmMove() { const targetId = parseFloat(document.getElementById('moveTargetSelect').value); const task = categories.find(c => c.id === currentUserId).tasks.splice(taskToMoveIdx, 1)[0]; categories.find(c => c.id === targetId).tasks.push(task); closeMoveModal(); showToast("Aktarıldı", "success"); renderTasks(currentUserId); renderCards(); localStorage.setItem('yonetimData', JSON.stringify(categories)); if(isManagerMode) renderAnalysis(); }
-        function syncData() { fetch(FIREBASE_URL, { method: 'PUT', body: JSON.stringify(categories) }).then(() => { showToast("Buluta Kaydedildi", "success"); }); }
+        
+        function syncData() {
+            showToast("Buluta Mühürleniyor...", "success");
+            fetch(FIREBASE_URL, { method: 'PUT', body: JSON.stringify(categories) })
+            .then(() => { showToast("Bulut Başarıyla Mühürlendi!", "success"); })
+            .catch(() => { showToast("Mühürleme Hatası!", "error"); });
+        }
+
         function updateLoginList() { document.getElementById('personSelect').innerHTML = '<option value="">İsim Seçin</option><option value="all">--- YÖNETİCİ ---</option>' + categories.map(c => `<option value="${c.id}">${c.title}</option>`).join(''); }
         function logout() { location.reload(); }
         function openModal(id) { currentUserId = id; document.getElementById('modalTitle').innerText = categories.find(c => c.id === id).title; renderTasks(id); document.getElementById('taskModal').classList.replace('hidden', 'flex'); }
@@ -310,7 +317,7 @@
 
         function generateReport(uId = null) {
             const data = uId ? categories.filter(c => c.id === uId) : categories;
-            let html = `<html><body style="font-family:sans-serif; padding:40px;"><h2>Task Report - ${new Date().toLocaleDateString()}</h2>`;
+            let html = `<html><body style="font-family:sans-serif; padding:40px;"><h2>Task Report</h2>`;
             data.forEach(cat => {
                 html += `<h3>${cat.title}</h3><table border="1" width="100%" cellpadding="10" style="border-collapse:collapse; margin-bottom:20px;"><tr><th>Önem</th><th>Görev</th><th>Durum</th><th>Not</th></tr>`;
                 cat.tasks.forEach(t => { html += `<tr><td>${t.priority}</td><td>${t.text}</td><td>${t.status || 'Yapılıyor'}</td><td>${t.note || '-'}</td></tr>`; });
