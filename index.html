@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Task Hub Pro - Kesin Veri Kilidi</title>
+    <title>Task Hub Pro - Bulut Geri Yükleme</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -62,14 +62,17 @@
             <h2 class="text-white text-3xl font-extrabold mb-6 italic uppercase">TASK HUB PRO</h2>
             <div class="flex items-center justify-center gap-2 mb-4">
                 <div id="statusDot" class="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse"></div>
-                <p id="cloudStatus" class="text-amber-400 text-xs font-bold uppercase tracking-widest">Kontrol Ediliyor...</p>
+                <p id="cloudStatus" class="text-amber-400 text-xs font-bold uppercase tracking-widest">Senkronizasyon...</p>
             </div>
             <select id="personSelect" class="w-full p-4 outline-none mb-6">
-                <option value="">İsimler Bekleniyor...</option>
+                <option value="">Lütfen Bekleyin...</option>
             </select>
-            <div class="grid grid-cols-2 gap-3 mb-6">
-                <button onclick="document.getElementById('restoreInput').click()" class="bg-slate-800 text-white text-[11px] py-3 rounded-xl hover:bg-slate-700 transition">JSON YÜKLE</button>
-                <button onclick="clearStorage()" class="bg-slate-800 text-rose-400 text-[11px] py-3 rounded-xl hover:bg-slate-700 transition">SIFIRLA</button>
+            <div class="grid grid-cols-2 gap-3 mb-3">
+                <button onclick="document.getElementById('restoreInput').click()" class="bg-slate-800 text-white text-[10px] py-3 rounded-xl hover:bg-slate-700 transition uppercase font-bold">JSON YÜKLE</button>
+                <button onclick="loadDataForce()" class="bg-indigo-600 text-white text-[10px] py-3 rounded-xl hover:bg-indigo-500 transition uppercase font-bold border border-white/20">Buluttan Yükle</button>
+            </div>
+            <div class="mb-6">
+                <button onclick="clearStorage()" class="w-full bg-slate-800 text-rose-400 text-[10px] py-3 rounded-xl hover:bg-slate-700 transition uppercase font-bold">Sistemi Sıfırla</button>
             </div>
             <button onclick="loginUser()" class="w-full bg-indigo-600 text-white font-black py-5 rounded-2xl shadow-xl hover:bg-indigo-500 transition active:scale-95">GİRİŞ YAP</button>
             <input type="file" id="restoreInput" accept=".json" class="hidden">
@@ -155,41 +158,62 @@
             setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 400); }, 3000);
         }
 
-        // --- GELİŞMİŞ VERİ KİLİTLEME SİSTEMİ ---
-        async function loadData() {
+        // --- ZORUNLU BULUT YÜKLEME FONKSİYONU ---
+        async function loadDataForce() {
             const statusText = document.getElementById('cloudStatus');
             const statusDot = document.getElementById('statusDot');
+            statusText.innerText = "Bulut Sorgulanıyor...";
             
-            // 1. Önce hafızayı göster (Bozuk bulut verisinin temizlemesini engeller)
-            const local = localStorage.getItem('yonetimData');
-            if(local && local !== "[]") {
-                categories = JSON.parse(local);
-                updateLoginList();
-                statusText.innerText = "HAFIZA KİLİTLENDİ";
-            }
-
             try {
-                // 2. Bulutu sorgula
                 const response = await fetch(FIREBASE_URL);
                 let data = await response.json();
                 if (data && !Array.isArray(data)) data = Object.values(data);
                 
-                // 3. EĞER BULUTTA GERÇEKTEN SAĞLAM VERİ VARSA ÜSTÜNE YAZ
                 if (data && data.length > 0 && data[0].title && data[0].title !== "undefined") {
+                    // Şifre Onarımı Yap
+                    data.forEach(c => { if(!c.password) c.password = passList[c.title.toUpperCase()] || "1234"; });
+                    
                     categories = data;
                     localStorage.setItem('yonetimData', JSON.stringify(categories));
                     updateLoginList();
-                    statusText.innerText = "BULUT SENKRONİZASYONU TAMAM";
+                    statusText.innerText = "Bulut Verisi Geri Yüklendi";
                     statusDot.className = "w-2.5 h-2.5 rounded-full bg-emerald-500";
+                    showToast("Bulut verisi başarıyla çekildi!", "success");
+                } else {
+                    showToast("Bulutta sağlam veri bulunamadı!", "error");
                 }
-            } catch (err) { statusText.innerText = "ÇEVRİMDIŞI MOD"; }
+            } catch (err) {
+                showToast("Buluta bağlanılamadı!", "error");
+            }
+        }
+
+        async function loadData() {
+            const statusText = document.getElementById('cloudStatus');
+            const local = localStorage.getItem('yonetimData');
+            if(local && local !== "[]") {
+                categories = JSON.parse(local);
+                updateLoginList();
+                statusText.innerText = "Hafıza Kilitli";
+            }
+            try {
+                const response = await fetch(FIREBASE_URL);
+                let data = await response.json();
+                if (data && !Array.isArray(data)) data = Object.values(data);
+                if (data && data.length > 0 && data[0].title && data[0].title !== "undefined") {
+                    data.forEach(c => { if(!c.password) c.password = passList[c.title.toUpperCase()] || "1234"; });
+                    categories = data;
+                    localStorage.setItem('yonetimData', JSON.stringify(categories));
+                    updateLoginList();
+                    statusText.innerText = "Senkronizasyon Tamam";
+                    document.getElementById('statusDot').className = "w-2.5 h-2.5 rounded-full bg-emerald-500";
+                }
+            } catch (err) { statusText.innerText = "Çevrimdışı Mod"; }
             updateLoginList();
         }
 
         async function loginUser() {
             const select = document.getElementById('personSelect');
             if (!select.value || select.value === "") return alert("Lütfen isim seçin!");
-            
             if (select.value === "all") {
                 if (prompt("Yönetici Şifresi:") !== ADMIN_PASS) return alert("Hatalı!");
                 isManagerMode = true;
@@ -200,19 +224,15 @@
                 isManagerMode = false;
                 currentUserId = parseFloat(select.value);
                 const user = categories.find(c => c.id === currentUserId);
-                if(!user) return alert("Hata: Personel listesi güncel değil!");
-
+                if(!user) return alert("Hata: Veriler güncel değil, lütfen 'Buluttan Yükle' butonuna basın.");
                 const pass = prompt(`${user.title} şifresi:`);
                 const cleanInput = pass ? pass.toString().trim() : "";
                 const cloudPass = user.password ? user.password.toString().trim() : "";
                 const backupPass = passList[user.title.toUpperCase()] || "1234";
-
                 if (cleanInput === cloudPass || cleanInput === backupPass) {
                     document.getElementById('activeUserNameDisplay').innerText = user.title;
-                    document.getElementById('adminBackupBtn').classList.add('hidden');
                 } else { return alert("Hatalı Şifre!"); }
             }
-            
             document.getElementById('loginOverlay').classList.add('hidden');
             document.getElementById('mainHeader').classList.remove('hidden');
             document.getElementById('cardContainer').classList.remove('hidden');
@@ -228,7 +248,7 @@
                 return `
                     <div class="bg-indigo-50/50 p-6 rounded-3xl border border-indigo-100">
                         <div class="flex justify-between items-center mb-4"><span class="font-black text-indigo-900">${cat.title}</span><span class="text-[10px] font-bold bg-white px-2 py-1 rounded-lg text-indigo-600 shadow-sm">${cat.tasks.length} İŞ</span></div>
-                        <div class="text-[10px] font-bold text-slate-500 uppercase mb-2">KRİTİK BAŞARI (A & 1)</div>
+                        <div class="text-[10px] font-bold text-slate-500 uppercase mb-2">A & 1 Performansı</div>
                         <div class="flex items-center gap-3"><div class="flex-1 h-2 bg-slate-200 rounded-full overflow-hidden"><div class="h-full bg-emerald-500" style="width: ${score}%"></div></div><span class="text-xs font-black text-emerald-600">%${score}</span></div>
                     </div>`;
             }).join('');
@@ -240,13 +260,11 @@
             container.innerHTML = usersToShow.map(cat => {
                 const counts = {}; cat.tasks.forEach(t => counts[t.priority] = (counts[t.priority] || 0) + 1);
                 const sidebar = `<div class="neon-sidebar">${["R","RG","RH","RA","A","1","2","3"].map(p => counts[p] ? `<div class="neon-tag neon-${p}">${p}:${counts[p]}</div>` : "").join('')}</div>`;
-                
                 const adminTools = isManagerMode ? `
                     <div class="absolute top-2 right-4 flex gap-2">
                         <button onclick="event.stopPropagation(); alert('Şifre: ' + '${cat.password || passList[cat.title.toUpperCase()] || "1234"}')" class="text-indigo-600 text-xs font-bold bg-white/80 px-2 py-1 rounded-lg shadow-sm"><i class="fa-solid fa-eye"></i></button>
                         <button onclick="event.stopPropagation(); changeUserPass(${cat.id})" class="text-emerald-600 text-xs font-bold bg-white/80 px-2 py-1 rounded-lg shadow-sm"><i class="fa-solid fa-key"></i></button>
                     </div>` : "";
-
                 return `<div class="task-card" onclick="openModal(${cat.id})">${sidebar}${adminTools}<div class="p-6 flex flex-col justify-between flex-1"><h3 class="text-xl font-bold text-slate-800">${cat.title}</h3><p class="text-indigo-400 text-xs font-black uppercase tracking-widest">${cat.tasks.length} Görev Kaydı</p></div></div>`;
             }).join('');
         }
@@ -293,7 +311,8 @@
         function logout() { location.reload(); }
         function openModal(id) { currentUserId = id; document.getElementById('modalTitle').innerText = categories.find(c => c.id === id).title; renderTasks(id); document.getElementById('taskModal').classList.replace('hidden', 'flex'); }
         function closeModal() { document.getElementById('taskModal').classList.replace('flex', 'hidden'); renderCards(); }
-        function exportBackup() { const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(categories)); const downloadAnchorNode = document.createElement('a'); downloadAnchorNode.setAttribute("href", dataStr); downloadAnchorNode.setAttribute("download", "Yonetim_Sistem_Yedek.json"); downloadAnchorNode.click(); downloadAnchorNode.remove(); }
+        function clearStorage() { if(confirm("Hafıza temizlenecek!")) { localStorage.clear(); location.reload(); } }
+        function exportBackup() { const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(categories)); const downloadAnchorNode = document.createElement('a'); downloadAnchorNode.setAttribute("href", dataStr); downloadAnchorNode.setAttribute("download", "Yonetim_Yedek.json"); downloadAnchorNode.click(); downloadAnchorNode.remove(); }
         function changeUserPass(id) { const user = categories.find(c => c.id === id); const newPass = prompt(`${user.title} için yeni şifre:`); if(newPass) { user.password = newPass.toString().trim(); showToast("Şifre Değiştirildi", "success"); renderCards(); } }
 
         document.getElementById('restoreInput').addEventListener('change', function(e) {
